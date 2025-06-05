@@ -6,16 +6,20 @@ using IoTMonitoring.Api.Data.Models;
 using IoTMonitoring.Api.Data.Repositories.Interfaces;
 using IoTMonitoring.Api.Services.CompanySvc.Interfaces;
 using IoTMonitoring.Api.DTOs;
+using Microsoft.EntityFrameworkCore;
 
 namespace IoTMonitoring.Api.Services.CompanySvc
 {
     public class CompanyService : ICompanyService
     {
         private readonly ICompanyRepository _companyRepository;
+        private readonly ILogger<CompanyService> _logger;
 
-        public CompanyService(ICompanyRepository companyRepository)
+        public CompanyService(ICompanyRepository companyRepository,
+             ILogger<CompanyService> logger)
         {
             _companyRepository = companyRepository;
+            _logger = logger;
         }
 
         public async Task<IEnumerable<CompanyDto>> GetAllCompaniesAsync(bool includeInactive = false)
@@ -298,6 +302,52 @@ namespace IoTMonitoring.Api.Services.CompanySvc
             {
                 return await _companyRepository.GetSensorCountByCompanyIdAsync(companyId);
             }
+        }
+
+        public async Task<List<CompanyDto>> GetCompaniesByUserIdAsync(int userId)
+        {
+            try
+            {
+                var companies = await _companyRepository.GetCompaniesByUserIdAsync(userId);
+
+                var companyDtos = new List<CompanyDto>();
+
+                foreach (var company in companies)
+                {
+                    var dto = new CompanyDto
+                    {
+                        CompanyID = company.CompanyID,
+                        CompanyName = company.CompanyName,
+                        Address = company.Address,
+                        ContactPerson = company.ContactPerson,
+                        ContactPhone = company.ContactPhone,
+                        ContactEmail = company.ContactEmail,
+                        Active = company.Active,
+                        UserCount = await _companyRepository.GetUserCountByCompanyIdAsync(company.CompanyID),
+                        SensorCount = await _companyRepository.GetSensorCountByCompanyIdAsync(company.CompanyID),
+                        GroupCount = await _companyRepository.GetGroupCountByCompanyIdAsync(company.CompanyID)
+                    };
+
+                    companyDtos.Add(dto);
+                }
+
+                return companyDtos;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"사용자 {userId}의 회사 목록 조회 중 오류");
+                throw;
+            }
+        }
+
+        public async Task<bool> UserCanAccessCompanyAsync(int userId, int companyId)
+        {
+            return await _companyRepository.UserHasAccessToCompanyAsync(userId, companyId);
+        }
+
+        public Task<List<CompanyDto>> GetAllCompaniesAsync()
+        {
+            throw new NotImplementedException();
         }
     }
 }

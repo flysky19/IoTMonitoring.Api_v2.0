@@ -24,5 +24,8 @@ namespace IoTMonitoring.Api.Services.CompanySvc.Interfaces
         Task<IEnumerable<UserDto>> GetCompanyUsersAsync(int companyId);
         Task<int> GetSensorCountByCompanyAsync(int companyId, bool activeOnly = true);
 
+        Task<List<CompanyDto>> GetCompaniesByUserIdAsync(int userId);
+        Task<List<CompanyDto>> GetAllCompaniesAsync();
+
     }
 }

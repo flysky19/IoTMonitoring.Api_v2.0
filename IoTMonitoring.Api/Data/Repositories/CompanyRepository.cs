@@ -314,5 +314,40 @@ namespace IoTMonitoring.Api.Data.Repositories
                 return await connection.ExecuteScalarAsync<int>(sql, new { CompanyID = companyId });
             }
         }
+
+        /// <summary>
+        /// 특정 사용자가 접근 가능한 회사 목록 조회
+        /// </summary>
+        public async Task<IEnumerable<Company>> GetCompaniesByUserIdAsync(int userId)
+        {
+            using (var connection = await _connectionFactory.CreateConnectionAsync())
+            {
+                var sql = @"
+                SELECT c.* 
+                FROM Companies c
+                INNER JOIN UserCompanies uc ON c.CompanyID = uc.CompanyID
+                WHERE uc.UserID = @UserID AND c.Active = 1
+                ORDER BY c.CompanyName";
+
+                return await connection.QueryAsync<Company>(sql, new { UserID = userId });
+            }
+        }
+
+        /// <summary>
+        /// 사용자가 특정 회사에 접근 권한이 있는지 확인
+        /// </summary>
+        public async Task<bool> UserHasAccessToCompanyAsync(int userId, int companyId)
+        {
+            using (var connection = await _connectionFactory.CreateConnectionAsync())
+            {
+                var count = await connection.ExecuteScalarAsync<int>(
+                    @"SELECT COUNT(1) 
+                  FROM UserCompanies 
+                  WHERE UserID = @UserID AND CompanyID = @CompanyID",
+                    new { UserID = userId, CompanyID = companyId });
+
+                return count > 0;
+            }
+        }
     }
 }

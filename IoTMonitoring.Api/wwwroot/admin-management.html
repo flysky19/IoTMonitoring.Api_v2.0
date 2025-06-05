@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>관리자 페이지 - IoT 모니터링</title>
 
+    <link rel="stylesheet" href="public/css/common.css" />
     <link rel="stylesheet" href="public/css/admin-management.css" />
 </head>
 <body>
     <div class="header">
         <h1>⚙️ 관리자 페이지</h1>
-        <a href="dashboard.html" class="btn">← 대시보드로 돌아가기</a>
+        <button id="logoutBtn" class="logout-btn" onclick="logout()">로그아웃</button>
     </div>
 
     <!-- 탭 메뉴 -->

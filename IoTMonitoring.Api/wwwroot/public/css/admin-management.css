@@ -1023,6 +1023,22 @@ tr:hover {
     }
 }
 
+.logout-btn {
+    padding: 6px 16px;
+    background: transparent;
+    border: 1px solid var(--accent-danger);
+    color: var(--accent-danger);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+    .logout-btn:hover {
+        background: var(--accent-danger);
+        color: white;
+    }
+
 .sensor-checkbox {
     margin-right: 1rem;
     width: 18px;

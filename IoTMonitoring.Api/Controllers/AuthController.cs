@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Security.Authentication;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using IoTMonitoring.Api.DTOs.Auth;
 using IoTMonitoring.Api.Services.Auth.Interfaces;
@@ -77,10 +78,24 @@ namespace IoTMonitoring.Api.Controllers
 
         [Authorize]
         [HttpGet("validate")]
-        public async Task<ActionResult> ValidateToken()
+        public IActionResult ValidateToken()
         {
-            // 이 엔드포인트는 Authorize 속성으로 인해 토큰이 유효한 경우에만 접근 가능
-            return Ok(new { isValid = true });
+            // 토큰이 유효하면 사용자 정보 반환
+            var userId = User.FindFirst("UserId")?.Value;
+            var username = User.FindFirst(ClaimTypes.Name)?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(new { message = "Invalid token" });
+            }
+
+            return Ok(new
+            {
+                isValid = true,
+                userId = userId,
+                username = username,
+                timestamp = DateTime.UtcNow
+            });
         }
     }
 }

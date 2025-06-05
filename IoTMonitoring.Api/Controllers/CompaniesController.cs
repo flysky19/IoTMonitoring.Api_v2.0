@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using IoTMonitoring.Api.DTOs;
 using IoTMonitoring.Api.Services.CompanySvc.Interfaces;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace IoTMonitoring.Api.Controllers
 {
@@ -12,10 +13,12 @@ namespace IoTMonitoring.Api.Controllers
     public class CompaniesController : ControllerBase
     {
         private readonly ICompanyService _companyService;
+        private readonly ILogger<CompaniesController> _logger;
 
-        public CompaniesController(ICompanyService companyService)
+        public CompaniesController(ICompanyService companyService, ILogger<CompaniesController> logger)
         {
             _companyService = companyService;
+            _logger = logger;
         }
 
         // 모든 업체 조회
@@ -141,6 +144,51 @@ namespace IoTMonitoring.Api.Controllers
             catch (KeyNotFoundException)
             {
                 return NotFound($"Company with ID {id} not found");
+            }
+        }
+
+        /// <summary>
+        /// 현재 사용자가 속한 회사 목록 조회
+        /// </summary>
+        [HttpGet("users")]
+        public async Task<IActionResult> GetUserCompanies()
+        {
+            try
+            {
+                var userIdClaim = User.FindFirst("UserId") ?? User.FindFirst(ClaimTypes.NameIdentifier);
+                
+                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+                {
+                    return Unauthorized("사용자 정보를 찾을 수 없습니다.");
+                }
+
+                var companies = await _companyService.GetCompaniesByUserIdAsync(userId);
+
+                return Ok(companies);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "사용자 회사 목록 조회 중 오류 발생");
+                return StatusCode(500, new { message = "서버 오류가 발생했습니다." });
+            }
+        }
+
+        /// <summary>
+        /// 모든 회사 목록 조회 (관리자용)
+        /// </summary>
+        [HttpGet("all")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetAllCompanies()
+        {
+            try
+            {
+                var companies = await _companyService.GetAllCompaniesAsync();
+                return Ok(companies);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "전체 회사 목록 조회 중 오류 발생");
+                return StatusCode(500, new { message = "서버 오류가 발생했습니다." });
             }
         }
     }

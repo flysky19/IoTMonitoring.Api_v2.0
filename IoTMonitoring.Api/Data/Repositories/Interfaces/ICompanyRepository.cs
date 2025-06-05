@@ -27,5 +27,8 @@ namespace IoTMonitoring.Api.Data.Repositories.Interfaces
         Task<IEnumerable<SensorGroup>> GetSensorGroupsByCompanyIdAsync(int companyId);
         Task<IEnumerable<User>> GetUsersByCompanyIdAsync(int companyId);
         Task<int> GetActiveSensorCountByCompanyIdAsync(int companyId);
+
+        Task<IEnumerable<Company>> GetCompaniesByUserIdAsync(int userId);
+        Task<bool> UserHasAccessToCompanyAsync(int userId, int companyId);
     }
 }

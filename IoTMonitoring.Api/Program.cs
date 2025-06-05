@@ -20,6 +20,7 @@ using IoTMonitoring.Api.Utilities;
 using IoTMonitoring.Api.Data.RateLimit;
 using IoTMonitoring.Api.Middlewares;
 using IoTMonitoring.Api.Services.RateLimit;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -94,12 +95,12 @@ builder.Services.AddSwaggerGen(c =>
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
-    {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
-    });
+    options.AddPolicy("AllowSpecificOrigin",
+        builder => builder
+            .WithOrigins("http://localhost:3000", "https://yourdomain.com")
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials());
 });
 
 // 사용자 정의 서비스 등록 (순서 중요!)
@@ -163,8 +164,17 @@ app.UseDefaultFiles(new DefaultFilesOptions
 });
 app.UseRouting();
 
-app.UseHttpsRedirection();
-app.UseCors("AllowAll");
+// 또는 특정 폴더 지정
+//app.UseStaticFiles(new StaticFileOptions
+//{
+//    FileProvider = new PhysicalFileProvider(
+//        Path.Combine(builder.Environment.ContentRootPath, "public")),
+//    RequestPath = "/public"
+//});
+
+
+//app.UseHttpsRedirection();
+app.UseCors("AllowSpecificOrigin");
 
 
 app.MapGet("/debug", () => "API is running!");

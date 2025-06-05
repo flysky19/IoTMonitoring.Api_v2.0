@@ -15,6 +15,10 @@
             var mqttHost = configuration["MqttSettings:BrokerHost"];
             if (string.IsNullOrEmpty(mqttHost))
                 throw new InvalidOperationException("MQTT BrokerHost is not configured");
+
+            var configLic = configuration["License:SecretKey"];
+            if (string.IsNullOrEmpty(configLic))
+                throw new InvalidOperationException("SyncFusion License is not configured");
         }
     }
 }

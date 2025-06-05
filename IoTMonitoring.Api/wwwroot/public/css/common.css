@@ -87,6 +87,22 @@ header {
                 color: var(--color-accent);
             }
 
+.logout-btn {
+    padding: 6px 16px;
+    background: transparent;
+    border: 1px solid var(--accent-danger);
+    color: var(--accent-danger);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+    .logout-btn:hover {
+        background: var(--accent-danger);
+        color: white;
+    }
+
 /* 5) ÇªÅÍ ½ºÅ¸ÀÏ */
 footer {
     background-color: var(--color-primary-dark);
