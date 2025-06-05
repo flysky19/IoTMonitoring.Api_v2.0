@@ -1,0 +1,33 @@
+﻿<!-- public/partials/header.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- 여기서는 <title> 태그를 정의하지 않습니다.
+         실제 페이지(login.html, dashboard.html 등)에서 <title>을 따로 넣어줄 거예요 -->
+    <!-- 공통으로 사용될 CSS 파일 (common.css)만 먼저 로드 -->
+    <link rel="stylesheet" href="css/common.css" />
+    <!-- 페이지별 추가 CSS(예: login.css 등)는 각 HTML 파일에서 불러옵니다. -->
+    <!-- 네비게이션 바 등 공통 헤더 내용은 <body> 안쪽에 넣습니다. -->
+</head>
+<body>
+    <!-- 공통 네비게이션 바, 로고, 사용자 메뉴 등을 아래에 구현 -->
+    <header>
+        <nav class="navbar">
+            <a href="dashboard.html" class="nav-logo">🏠 홈</a>
+            <!-- 로그인 상태를 체크해서 '로그아웃' 또는 '로그인' 링크를 보여줄 수 있습니다. -->
+            <ul class="nav-menu">
+                <li><a href="dashboard.html">대시보드</a></li>
+                <li><a href="admin-management.html">관리자</a></li>
+                <!-- 로그아웃 버튼은 공통 JS(common.js)에 정의된 logout() 함수를 호출합니다. -->
+                <li><a href="#" onclick="logout()">로그아웃</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- 실제 페이지별 본문 내용은 이 <main>…</main> 구간 앞뒤에서 삽입됩니다. -->
+    <main>
+    
+    </main>
+</body>

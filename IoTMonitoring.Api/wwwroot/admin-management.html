@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 페이지 - IoT 모니터링</title>
+
+    <link rel="stylesheet" href="public/css/admin-management.css" />
+</head>
+<body>
+    <div class="header">
+        <h1>⚙️ 관리자 페이지</h1>
+        <a href="dashboard.html" class="btn">← 대시보드로 돌아가기</a>
+    </div>
+
+    <!-- 탭 메뉴 -->
+    <div class="tabs">
+        <button class="tab active" onclick="showTab('sensors', event)">
+            <span class="tab-icon">📡</span>센서 관리
+        </button>
+        <button class="tab" onclick="showTab('sensor-groups', event)">
+            <span class="tab-icon">📊</span>센서 그룹 관리
+        </button>
+        <button class="tab" onclick="showTab('users', event)">
+            <span class="tab-icon">👥</span>사용자 관리
+        </button>
+        <button class="tab" onclick="showTab('companies', event)">
+            <span class="tab-icon">🏢</span>회사 관리
+        </button>
+    </div>
+
+    <!-- 센서 관리 탭 -->
+    <div id="sensors-tab" class="tab-content active">
+        <div class="stats-container">
+            <div class="stat-card total">
+                <div class="stat-icon">📊</div>
+                <div class="stat-value" id="totalSensors">0</div>
+                <div class="stat-label">전체 센서</div>
+            </div>
+            <div class="stat-card active">
+                <div class="stat-icon">✅</div>
+                <div class="stat-value" id="activeSensors">0</div>
+                <div class="stat-label">활성 센서</div>
+            </div>
+            <div class="stat-card online">
+                <div class="stat-icon">🟢</div>
+                <div class="stat-value" id="onlineSensors">0</div>
+                <div class="stat-label">온라인</div>
+            </div>
+            <div class="stat-card offline">
+                <div class="stat-icon">🔴</div>
+                <div class="stat-value" id="offlineSensors">0</div>
+                <div class="stat-label">오프라인</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="control-row">
+                <div class="search-box">
+                    <input type="text" id="sensorSearchInput" placeholder="센서명, UUID로 검색..." />
+                    <button class="btn" onclick="searchSensors()">🔍 검색</button>
+                </div>
+                <button class="btn success" onclick="openAddSensorModal()">➕ 새 센서 추가</button>
+                <button class="btn secondary" onclick="loadSensors()">🔄 새로고침</button>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div class="table-header">
+                <span id="sensorCount">총 0개의 센서</span>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>센서 ID</th>
+                            <th>센서명</th>
+                            <th>타입</th>
+                            <th>상태</th>
+                            <th>연결 상태</th>
+                            <th>소속 회사</th>
+                            <th>마지막 통신</th>
+                            <th>작업</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sensorTableBody">
+                        <tr>
+                            <td colspan="8" class="empty-state">센서 목록을 불러오는 중...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 센서 그룹 관리 탭 -->
+    <div id="sensor-groups-tab" class="tab-content">
+        <div class="stats-container">
+            <div class="stat-card total">
+                <div class="stat-icon">📊</div>
+                <div class="stat-value" id="totalSensorGroups">0</div>
+                <div class="stat-label">전체 그룹</div>
+            </div>
+            <div class="stat-card active">
+                <div class="stat-icon">✅</div>
+                <div class="stat-value" id="activeSensorGroups">0</div>
+                <div class="stat-label">활성 그룹</div>
+            </div>
+            <div class="stat-card sensors">
+                <div class="stat-icon">📡</div>
+                <div class="stat-value" id="totalGroupSensors">0</div>
+                <div class="stat-label">전체 센서</div>
+            </div>
+            <div class="stat-card online">
+                <div class="stat-icon">🟢</div>
+                <div class="stat-value" id="avgSensorsPerGroup">0</div>
+                <div class="stat-label">평균 센서/그룹</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="control-row">
+                <div class="search-box">
+                    <input type="text" id="groupSearchInput" placeholder="그룹명, 위치로 검색..." />
+                    <button class="btn" onclick="searchGroups()">🔍 검색</button>
+                </div>
+                <div class="filter-group">
+                    <label for="groupCompanyFilter">회사</label>
+                    <select id="groupCompanyFilter" onchange="loadSensorGroups()">
+                        <option value="">전체</option>
+                    </select>
+                </div>
+                <button class="btn success" onclick="openAddGroupModal()">➕ 새 그룹 추가</button>
+                <button class="btn secondary" onclick="loadSensorGroups()">🔄 새로고침</button>
+            </div>
+        </div>
+
+        <div class="sensor-group-grid" id="sensorGroupGrid">
+            <div class="empty-state">센서 그룹 목록을 불러오는 중...</div>
+        </div>
+    </div>
+
+    <!-- 사용자 관리 탭 -->
+    <div id="users-tab" class="tab-content">
+        <div class="stats-container">
+            <div class="stat-card users">
+                <div class="stat-icon">👥</div>
+                <div class="stat-value" id="totalUsers">0</div>
+                <div class="stat-label">전체 사용자</div>
+            </div>
+            <div class="stat-card active">
+                <div class="stat-icon">✅</div>
+                <div class="stat-value" id="activeUsers">0</div>
+                <div class="stat-label">활성 사용자</div>
+            </div>
+            <div class="stat-card admins">
+                <div class="stat-icon">👑</div>
+                <div class="stat-value" id="adminUsers">0</div>
+                <div class="stat-label">관리자</div>
+            </div>
+            <div class="stat-card inactive">
+                <div class="stat-icon">⏸️</div>
+                <div class="stat-value" id="inactiveUsers">0</div>
+                <div class="stat-label">비활성 사용자</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="control-row">
+                <div class="search-box">
+                    <input type="text" id="userSearchInput" placeholder="사용자명, 이메일로 검색..." />
+                    <button class="btn" onclick="searchUsers()">🔍 검색</button>
+                </div>
+                <button class="btn success" onclick="openAddUserModal()">➕ 새 사용자 추가</button>
+                <button class="btn secondary" onclick="loadUsers()">🔄 새로고침</button>
+            </div>
+
+            <div class="control-row">
+                <div class="filter-group">
+                    <input type="checkbox" id="showInactive" onchange="loadUsers()">
+                    <label for="showInactive">비활성 사용자 포함</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div class="table-header">
+                <span id="userCount">총 0명의 사용자</span>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>사용자명</th>
+                            <th>이름</th>
+                            <th>이메일</th>
+                            <th>역할</th>
+                            <th>회사</th>
+                            <th>상태</th>
+                            <th>가입일</th>
+                            <th>작업</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTableBody">
+                        <tr>
+                            <td colspan="9" class="empty-state">사용자 목록을 불러오는 중...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 회사 관리 탭 -->
+    <div id="companies-tab" class="tab-content">
+        <div class="stats-container">
+            <div class="stat-card total">
+                <div class="stat-icon">🏢</div>
+                <div class="stat-value" id="totalCompanies">0</div>
+                <div class="stat-label">전체 회사</div>
+            </div>
+            <div class="stat-card active">
+                <div class="stat-icon">✅</div>
+                <div class="stat-value" id="activeCompanies">0</div>
+                <div class="stat-label">활성 회사</div>
+            </div>
+            <div class="stat-card inactive">
+                <div class="stat-icon">❌</div>
+                <div class="stat-value" id="inactiveCompanies">0</div>
+                <div class="stat-label">비활성 회사</div>
+            </div>
+            <div class="stat-card users">
+                <div class="stat-icon">👥</div>
+                <div class="stat-value" id="companyUsers">0</div>
+                <div class="stat-label">배정된 사용자</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="control-row">
+                <div class="search-box">
+                    <input type="text" id="companySearchInput" placeholder="회사명, 담당자로 검색..." />
+                    <button class="btn" onclick="searchCompanies()">🔍 검색</button>
+                </div>
+                <button class="btn success" onclick="openAddCompanyModal()">➕ 새 회사 추가</button>
+                <button class="btn secondary" onclick="loadCompanies()">🔄 새로고침</button>
+            </div>
+        </div>
+
+        <div class="company-grid" id="companyGrid">
+            <div class="empty-state">회사 목록을 불러오는 중...</div>
+        </div>
+    </div>
+
+
+    <!-- 센서 추가 모달 -->
+    <div id="addSensorModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>새 센서 추가</h2>
+                <button class="close" onclick="closeAddSensorModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="addSensorForm">
+                    <!-- UUID 생성 -->
+                    <div class="form-group">
+                        <label for="newSensorUUID">UUID *</label>
+                        <div class="input-with-button">
+                            <input type="text" id="newSensorUUID" required placeholder="센서 고유 식별자">
+                            <button type="button" class="btn-generate" onclick="generateNewUUID()">
+                                🔄 자동 생성
+                            </button>
+                        </div>
+                        <small class="form-text">센서의 고유 식별자입니다. 한번 설정하면 변경할 수 없습니다.</small>
+                    </div>
+
+                    <!-- 기본 정보 -->
+                    <div class="section-title">기본 정보</div>
+
+                    <div class="form-group">
+                        <label for="newSensorName">센서명 *</label>
+                        <input type="text" id="newSensorName" required placeholder="예: 1층 온습도 센서">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="newSensorType">센서 타입 *</label>
+                            <select id="newSensorType" required onchange="updateSensorTypeHint()">
+                                <option value="">선택하세요</option>
+                                <option value="temp_humidity">🌡️ 온습도 센서</option>
+                                <option value="particle">💨 미세먼지 센서</option>
+                                <option value="wind">🌪️ 풍속 센서</option>
+                                <option value="speaker">🔊 스피커</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="newSensorGroup">센서 그룹 *</label>
+                            <select id="newSensorGroup" required>
+                                <option value="">선택하세요</option>
+                                <!-- 동적으로 로드됨 -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="newSensorModel">모델명</label>
+                        <input type="text" id="newSensorModel" placeholder="예: DHT22, PMS7003">
+                        <div id="sensorTypeHint" class="type-hint" style="display: none;"></div>
+                    </div>
+
+                    <!-- 설치 정보 -->
+                    <div class="section-title">설치 정보</div>
+
+                    <div class="form-group">
+                        <label for="newInstallationDate">설치일</label>
+                        <input type="date" id="newInstallationDate" value="">
+                    </div>
+
+                    <!-- 통신 설정 -->
+                    <details class="advanced-settings" open>
+                        <summary>통신 설정</summary>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="newHeartbeatInterval">하트비트 간격 (초)</label>
+                                <input type="number" id="newHeartbeatInterval" value="60" min="10" max="3600">
+                                <small class="form-text">권장: 60초</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="newConnectionTimeout">연결 타임아웃 (초)</label>
+                                <input type="number" id="newConnectionTimeout" value="180" min="30" max="7200">
+                                <small class="form-text">권장: 180초 (하트비트 간격의 3배)</small>
+                            </div>
+                        </div>
+                    </details>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn secondary" onclick="closeAddSensorModal()">취소</button>
+                        <button type="submit" class="btn success">
+                            <span class="icon">➕</span> 센서 추가
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 센서 수정 모달 -->
+    <div id="editSensorModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>센서 정보 수정</h2>
+                <button class="close" onclick="closeEditSensorModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editSensorForm">
+                    <input type="hidden" id="editSensorId" value="1">
+
+                    <!-- 센서 식별 정보 (읽기 전용) -->
+                    <div class="readonly-info">
+                        <div class="info-row">
+                            <span class="info-label">UUID:</span>
+                            <span id="editSensorUUID" class="info-value">653d7f2f-106e-48b3-bb75-5f8ce30fdac5</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">센서 타입:</span>
+                            <span id="editSensorTypeDisplay" class="info-value">🌪️ 풍속 센서</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">등록일:</span>
+                            <span id="editSensorCreatedAt" class="info-value">2025. 6. 2.</span>
+                        </div>
+                    </div>
+
+                    <!-- 수정 가능한 정보 -->
+                    <div class="section-title">기본 정보</div>
+
+                    <div class="form-group">
+                        <label for="editSensorName">센서명 *</label>
+                        <input type="text" id="editSensorName" value="121212" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editSensorGroup">센서 그룹 *</label>
+                            <select id="editSensorGroup" required>
+                                <option value="">선택하세요</option>
+                                <option value="1" selected>공장 A동 (스마트팩토리)</option>
+                                <option value="2">본사 3층 (테크놀로지)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="editSensorModel">모델명</label>
+                            <input type="text" id="editSensorModel" value="12121212">
+                        </div>
+                    </div>
+
+                    <!-- 상태 정보 -->
+                    <div class="section-title">현재 상태</div>
+
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <span class="status-label">센서 상태</span>
+                            <span id="editSensorStatus" class="badge inactive">비활성</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">연결 상태</span>
+                            <span id="editConnectionStatus" class="badge unknown">알 수 없음</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">마지막 통신</span>
+                            <span id="editLastCommunication" class="status-value">-</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">마지막 하트비트</span>
+                            <span id="editLastHeartbeat" class="status-value">-</span>
+                        </div>
+                    </div>
+
+                    <!-- 상태 변경 액션 -->
+                    <div class="status-actions">
+                        <button type="button" class="btn success" id="activateBtn" onclick="activateSensor()">
+                            <span class="icon">✅</span> 활성화
+                        </button>
+                        <button type="button" class="btn warning" id="deactivateBtn" onclick="deactivateSensor()">
+                            <span class="icon">⏸️</span> 비활성화
+                        </button>
+                        <button type="button" class="btn danger" onclick="deleteSensorFromModal()">
+                            <span class="icon">🗑️</span> 센서 삭제
+                        </button>
+                    </div>
+
+                    <!-- 통신 설정 -->
+                    <details class="advanced-settings">
+                        <summary>🔧 통신 설정</summary>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="editHeartbeatInterval">하트비트 간격 (초)</label>
+                                <input type="number" id="editHeartbeatInterval" value="60" min="10" max="3600">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="editConnectionTimeout">연결 타임아웃 (초)</label>
+                                <input type="number" id="editConnectionTimeout" value="180" min="30" max="7200">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="editFirmwareVersion">펌웨어 버전</label>
+                            <input type="text" id="editFirmwareVersion" value="1.0.0">
+                        </div>
+                    </details>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn secondary" onclick="closeEditSensorModal()">
+                            <span class="icon">❌</span> 취소
+                        </button>
+                        <button type="submit" class="btn primary">
+                            <span class="icon">💾</span> 변경사항 저장
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 센서 그룹 추가/수정 모달 -->
+    <div id="sensorGroupModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="sensorGroupModalTitle">새 센서 그룹 추가</h2>
+                <button class="close" onclick="closeSensorGroupModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="sensorGroupForm">
+                    <input type="hidden" id="groupId">
+
+                    <div class="form-group">
+                        <label for="groupName">그룹명 *</label>
+                        <input type="text" id="groupName" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="groupCompany">회사 *</label>
+                        <select id="groupCompany" required>
+                            <option value="">선택하세요</option>
+                            <!-- 동적으로 로드됨 -->
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="groupLocation">위치</label>
+                        <input type="text" id="groupLocation" placeholder="예: 본사 3층, 제1공장 등">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="groupDescription">설명</label>
+                        <textarea id="groupDescription" rows="3" placeholder="그룹에 대한 설명을 입력하세요"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <input type="checkbox" id="groupActive" checked>
+                        <label for="groupActive" style="display: inline; margin-left: 0.5rem;">활성 상태</label>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn secondary" onclick="closeSensorGroupModal()">취소</button>
+                        <button type="submit" class="btn">저장</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 사용자 추가/수정 모달 -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="userModalTitle">새 사용자 추가</h2>
+                <button class="close" onclick="closeUserModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="userForm"  onsubmit="return handleUserSubmit(event)">
+                    <input type="hidden" id="userId">
+
+                    <div class="form-group">
+                        <label for="username">사용자명 *</label>
+                        <input type="text" id="username" required>
+                    </div>
+
+                    <div class="form-group" id="passwordGroup">
+                        <label for="password">비밀번호 *</label>
+                        <input type="password" id="password">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fullName">이름 *</label>
+                        <input type="text" id="fullName" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">이메일 *</label>
+                        <input type="email" id="email" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">전화번호</label>
+                        <input type="tel" id="userphone">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="roles">역할 *</label>
+                        <select id="roles" required>
+                            <option value="">선택하세요</option>
+                            <option value="Admin">관리자</option>
+                            <option value="User" selected>일반 사용자</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="companies">회사</label>
+                        <select id="companies" multiple>
+                            <!-- 동적으로 로드됨 -->
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <input type="checkbox" id="active" checked>
+                        <label for="active" style="display: inline; margin-left: 0.5rem;">활성 상태</label>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn secondary" onclick="closeUserModal()">취소</button>
+                        <button type="submit" class="btn">저장</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 비밀번호 리셋 모달 -->
+    <div id="resetPasswordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>비밀번호 리셋</h2>
+                <button class="close" onclick="closeResetModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="resetUserId">
+                <div class="form-group">
+                    <label for="newPassword">새 비밀번호 *</label>
+                    <input type="password" id="newPassword" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn secondary" onclick="closeResetModal()">취소</button>
+                    <button type="button" class="btn danger" onclick="resetPassword()">리셋</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 회사 추가/수정 모달 -->
+    <div id="companyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="companyModalTitle">새 회사 추가</h2>
+                <button class="close" onclick="closeCompanyModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="companyForm" onsubmit="return handleCompanySubmit(event)">
+                    <input type="hidden" id="companyId">
+
+                    <div class="form-group">
+                        <label for="companyName">회사명 *</label>
+                        <input type="text" id="companyName" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contactPerson">담당자</label>
+                        <input type="text" id="contactPerson">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="address">주소</label>
+                        <input type="text" id="address">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">전화번호</label>
+                        <input type="tel" id="companyphone">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="companyEmail">이메일</label>
+                        <input type="email" id="companyEmail">
+                    </div>
+
+                    <div class="form-group">
+                        <input type="checkbox" id="companyActive" checked>
+                        <label for="companyActive" style="display: inline; margin-left: 0.5rem;">활성 상태</label>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn secondary" onclick="closeCompanyModal()">취소</button>
+                        <button type="submit" class="btn">저장</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 센서 그룹 멤버 편집 모달 추가 -->
+    <div id="sensorGroupMemberModal" class="modal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h2 id="sensorGroupMemberTitle">센서 그룹 멤버 관리</h2>
+                <button class="close" onclick="closeSensorGroupMemberModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="group-member-container">
+                    <!-- 상단: 현재 그룹 센서 -->
+                    <div class="member-section">
+                        <h3>🔗 현재 그룹에 포함된 센서 <span id="includedCount" class="member-count">(0)</span></h3>
+                        <button class="select-all-btn" onclick="toggleAllSensors(true)">전체 선택</button>
+                        <div class="search-box" style="margin-bottom: 1rem;">
+                            <input type="text" id="includedSearchInput" placeholder="포함된 센서 검색..." onkeyup="filterIncludedSensors()">
+                        </div>
+                        <div id="includedSensorsList" class="sensor-member-list included">
+                            <div class="empty-state">그룹에 포함된 센서가 없습니다.</div>
+                        </div>
+                    </div>
+
+                    <!-- 구분선 -->
+                    <div class="member-divider">
+                        <div class="divider-line"></div>
+                        <div class="divider-icon">⇅</div>
+                        <div class="divider-line"></div>
+                    </div>
+
+                    <!-- 하단: 미포함 센서 -->
+                    <div class="member-section">
+                        <h3>📡 그룹에 포함되지 않은 센서 <span id="availableCount" class="member-count">(0)</span></h3>
+                        <div class="search-box" style="margin-bottom: 1rem;">
+                            <input type="text" id="availableSearchInput" placeholder="사용 가능한 센서 검색..." onkeyup="filterAvailableSensors()">
+                        </div>
+                        <div id="availableSensorsList" class="sensor-member-list available">
+                            <div class="empty-state">사용 가능한 센서를 불러오는 중...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn secondary" onclick="closeSensorGroupMemberModal()">취소</button>
+                    <button type="button" class="btn success" onclick="saveSensorGroupMembers()">
+                        <span class="save-icon">💾</span> 변경사항 적용
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="public/js/common.js"></script>
+    <script src="public/js/admin-management.js"></script>
+</body>
+</html>

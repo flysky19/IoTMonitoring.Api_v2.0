@@ -1,0 +1,146 @@
+/* public/css/admin.css */
+/* ───────────────────────────────────────────────────────────────────── */
+/* 관리자 페이지(센서/그룹/사용자/회사 관리) 공통 스타일 */
+
+/* 1) 관리자 컨테이너 */
+.admin-main {
+    padding: 1.5rem;
+    min-height: calc(100vh - 120px); /* 헤더 + 푸터 제외 */
+    background-color: var(--color-secondary-light);
+}
+
+    /* 2) 관리자 화면 제목 */
+    .admin-main h1 {
+        font-family: var(--font-sans-en);
+        font-size: 1.75rem;
+        color: var(--color-text-primary);
+        margin-bottom: 1rem;
+    }
+
+/* 3) 통계 카드 레이아웃 */
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat-card {
+    background-color: var(--color-background);
+    border-radius: var(--radius-base);
+    box-shadow: var(--shadow-base);
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+    .stat-card .stat-icon {
+        font-size: 2rem;
+        color: var(--color-accent);
+    }
+
+    .stat-card .stat-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+        .stat-card .stat-info .stat-value {
+            font-family: var(--font-sans-en);
+            font-size: 1.5rem;
+            color: var(--color-text-primary);
+        }
+
+        .stat-card .stat-info .stat-label {
+            font-size: 0.95rem;
+            color: var(--color-text-secondary);
+        }
+
+/* 4) 검색/버튼 컨트롤 */
+.controls {
+    margin-bottom: 1.5rem;
+}
+
+.control-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.search-box {
+    display: flex;
+    gap: 0.5rem;
+    flex: 1;
+    min-width: 200px;
+}
+
+    .search-box input {
+        flex: 1;
+    }
+
+    .search-box button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+/* 버튼 클래스 추가로 스타일 세분화 (common.css의 .btn를 기반으로 함) */
+.btn.success {
+    background-color: #22C55E; /* 초록 계열 성공 버튼 */
+}
+
+    .btn.success:hover {
+        background-color: #16A34A;
+    }
+
+.btn.secondary {
+    background-color: #64748B; /* 회색 톤 */
+}
+
+    .btn.secondary:hover {
+        background-color: #475569;
+    }
+
+/* 5) 센서 목록 테이블 등은 common.css에서 이미 정의된 테이블 스타일을 사용 */
+
+/* 6) 모달(폼) 스타일 : 공통 common.css 적용, 추가로 내부 레이아웃만 조정 */
+#addSensorModal .modal-content,
+#addGroupModal .modal-content,
+#addUserModal .modal-content,
+#addCompanyModal .modal-content {
+    width: 100%;
+    max-width: 480px;
+    padding: 1.5rem 2rem;
+}
+
+/* 7) 모달 내부 폼 그룹 */
+.form-group {
+    margin-top: 1rem;
+}
+
+    .form-group label {
+        display: block;
+        font-size: 0.9rem;
+        color: var(--color-text-secondary);
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        margin-top: 0.5rem;
+    }
+
+/* 8) 반응형 조정 */
+@media (max-width: 768px) {
+    .control-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .stats-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ───────────────────────────────────────────────────────────────────── */

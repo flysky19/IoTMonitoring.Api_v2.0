@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT 모니터링 대시보드</title>
+    <script src="https://unpkg.com/@microsoft/signalr@latest/dist/browser/signalr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <link rel="stylesheet" href="public/css/dashboard.css" />
+</head>
+<body>
+
+    <div class="header">
+        <h1>🌐 IoT 모니터링 대시보드</h1>
+        <div class="admin-controls" id="adminControls" style="display: none;">
+            <button class="admin-btn" onclick="openUserManagement()">
+                <span class="icon">👥</span>
+                <span>사용자 관리</span>
+                <span class="tooltip">사용자 계정 관리</span>
+            </button>
+
+            <button class="admin-btn" onclick="openSensorGroupManagement()">
+                <span class="icon">📊</span>
+                <span>센서 그룹 관리</span>
+                <span class="tooltip">센서별 그룹 관리</span>
+            </button>
+
+            <button class="admin-btn" onclick="openCompanyManagement()">
+                <span class="icon">🏢</span>
+                <span>회사 관리</span>
+                <span class="tooltip">회사 정보 관리</span>
+            </button>
+            <button class="admin-btn" onclick="openSensorManagement()">
+                <span class="icon">📡</span>
+                <span>센서 관리</span>
+                <span class="tooltip">센서 설정 관리</span>
+            </button>
+        </div>
+        <div class="user-info">
+            <button class="admin-btn" onclick="openProfile()" style="margin-right: 10px;">
+                <span class="icon">👤</span>
+                <span>내 정보</span>
+                <span class="tooltip">프로필 관리</span>
+            </button>
+            <span class="role-badge" id="roleDisplay">일반 사용자</span>
+            <span id="welcomeMessage">환영합니다!</span>
+            <button id="logoutBtn" class="logout-btn" onclick="logout()">로그아웃</button>
+        </div>
+    </div>
+
+    <!-- 관리자 대시보드 -->
+    <div class="admin-dashboard hidden" id="adminDashboard">
+        <!-- 통계 개요 -->
+        <div class="stats-overview">
+            <div class="stat-card users">
+                <div class="stat-header">
+                    <div class="stat-icon">👥</div>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number" id="adminTotalUsers">0</div>
+                    <div class="stat-label">전체 사용자</div>
+                    <div class="stat-details">
+                        <span>활성: <strong id="adminActiveUsers">0</strong></span>
+                        <span>비활성: <strong id="adminInactiveUsers">0</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card companies">
+                <div class="stat-header">
+                    <div class="stat-icon">🏢</div>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number" id="adminTotalCompanies">0</div>
+                    <div class="stat-label">전체 회사</div>
+                    <div class="stat-details">
+                        <span>활성: <strong id="adminActiveCompanies">0</strong></span>
+                        <span>비활성: <strong id="adminInactiveCompanies">0</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card sensors">
+                <div class="stat-header">
+                    <div class="stat-icon">📡</div>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number" id="adminTotalSensors">0</div>
+                    <div class="stat-label">전체 센서</div>
+                    <div class="stat-details">
+                        <span>온도습도: <strong id="adminTempSensors">0</strong></span>
+                        <span>미세먼지: <strong id="adminParticleSensors">0</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card online">
+                <div class="stat-header">
+                    <div class="stat-icon">🟢</div>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number" id="adminOnlineSensors">0</div>
+                    <div class="stat-label">온라인 센서</div>
+                    <div class="stat-details">
+                        <span>연결률: <strong id="adminConnectionRate">0%</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card alerts">
+                <div class="stat-header">
+                    <div class="stat-icon">🔔</div>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number" id="adminActiveAlerts">0</div>
+                    <div class="stat-label">활성 알림</div>
+                    <div class="stat-details">
+                        <span>오늘: <strong id="adminTodayAlerts">0</strong></span>
+                        <span>이번주: <strong id="adminWeekAlerts">0</strong></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 빠른 접근 -->
+        <div class="quick-access">
+            <h2>⚡ 빠른 접근</h2>
+            <div class="quick-links">
+                <a href="/user-management.html" class="quick-link">
+                    <span class="quick-link-icon">👤</span>
+                    <div>
+                        <div style="font-weight: 500;">사용자 추가</div>
+                        <div style="font-size: 0.85rem; color: #7f8c8d;">새 사용자 등록</div>
+                    </div>
+                </a>
+                <a href="/company-management.html" class="quick-link">
+                    <span class="quick-link-icon">🏢</span>
+                    <div>
+                        <div style="font-weight: 500;">회사 추가</div>
+                        <div style="font-size: 0.85rem; color: #7f8c8d;">새 회사 등록</div>
+                    </div>
+                </a>
+                <a href="/sensor-management.html" class="quick-link">
+                    <span class="quick-link-icon">📡</span>
+                    <div>
+                        <div style="font-weight: 500;">센서 추가</div>
+                        <div style="font-size: 0.85rem; color: #7f8c8d;">새 센서 등록</div>
+                    </div>
+                </a>
+                <a href="#" class="quick-link" onclick="viewSystemLogs()">
+                    <span class="quick-link-icon">📋</span>
+                    <div>
+                        <div style="font-weight: 500;">시스템 로그</div>
+                        <div style="font-size: 0.85rem; color: #7f8c8d;">로그 확인</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- 최근 활동 -->
+        <div class="recent-activities">
+            <h2>📊 최근 활동</h2>
+            <div class="activity-list" id="recentActivities">
+                <div class="activity-item">
+                    <div class="activity-icon user">👤</div>
+                    <div class="activity-details">
+                        <div class="activity-title">새 사용자 등록</div>
+                        <div class="activity-time">데이터 로딩 중...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 일반 사용자 대시보드 -->
+    <div class="user-dashboard hidden" id="userDashboard">
+        <div class="status-bar">
+            <span class="connection-status" id="signalrStatus"></span>
+            <span id="connectionStatus">SignalR 연결 중...</span>
+        </div>
+
+        <div class="dashboard-layout">
+            <!-- 좌측 사이드바 - 회사 목록 -->
+            <div class="sidebar">
+                <div class="card">
+                    <h2>🏢 회사별 센서</h2>
+                    <div class="controls">
+                        <button class="btn secondary" onclick="refreshCompanies()">새로고침</button>
+                    </div>
+                    <div id="companiesList" class="companies-list">
+                        <div class="empty-state">회사 정보를 불러오는 중...</div>
+                    </div>
+                    <button class="btn full-width" onclick="viewAllSensors()">
+                        🔍 전체 센서 보기
+                    </button>
+                </div>
+            </div>
+
+            <!-- 메인 컨텐츠 영역 -->
+            <div class="main-content">
+                <!-- 선택된 회사의 센서 목록 -->
+                <div class="card">
+                    <h2 id="sensorListTitle">📊 센서 상태</h2>
+                    <div class="controls">
+                        <button class="btn" onclick="refreshSensors()">새로고침</button>
+                        <button class="btn secondary" onclick="clearSensorList()">목록 초기화</button>
+                    </div>
+                    <div id="sensorList" class="sensor-display">
+                        <div class="empty-state">회사를 선택하여 센서를 확인하세요</div>
+                    </div>
+                </div>
+
+                <!-- 온도 차트 카드 -->
+                <div class="card">
+                    <h2>🌡️ 온도 추이</h2>
+                    <div class="chart-container">
+                        <canvas id="temperatureChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 습도 차트 카드 -->
+                <div class="card">
+                    <h2>💧 습도 추이</h2>
+                    <div class="chart-container">
+                        <canvas id="humidityChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 파티클 차트 카드 -->
+                <div class="card">
+                    <h2>💨 미세먼지 측정값</h2>
+                    <div class="chart-container">
+                        <canvas id="particleChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 실시간 데이터 카드 -->
+                <div class="card">
+                    <h2>📡 실시간 데이터</h2>
+                    <div class="controls">
+                        <button class="btn secondary" onclick="clearRealtimeData()">데이터 초기화</button>
+                        <button class="btn" onclick="exportData()">데이터 내보내기</button>
+                    </div>
+                    <div id="realtimeData" class="realtime-data">
+                        <div class="empty-state">실시간 데이터를 기다리는 중...</div>
+                    </div>
+                </div>
+
+                <!-- 통계 카드 -->
+                <div class="card">
+                    <h2>📈 통계</h2>
+                    <div id="statisticsGrid" class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalSensors">0</div>
+                            <div class="stat-label">총 센서 수</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="onlineSensors">0</div>
+                            <div class="stat-label">온라인 센서</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="avgTemperature">--</div>
+                            <div class="stat-label">평균 온도</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="avgHumidity">--</div>
+                            <div class="stat-label">평균 습도</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="public/js/common.js"></script>
+    <script src="public/js/dashboard.js"></script>
+
+</body>
+</html>

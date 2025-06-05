@@ -1,0 +1,304 @@
+/* public/css/common.css */
+/* ───────────────────────────────────────────────────────────────────── */
+/* 전체 웹사이트의 기본 컬러 팔레트와 공통 스타일을 정의합니다. */
+
+/* 0) CSS 변수(Variables) 선언 */
+:root {
+    --color-primary-dark: #1E293B; /* Dark Navy */
+    --color-secondary-light: #F1F5F9; /* Light Gray */
+    --color-accent: #06B6D4; /* Accent Cyan */
+    --color-accent-dark: #0CA89E; /* Hover/Active용 다크 톤 */
+    --color-text-primary: #0F172A; /* 진한 텍스트 */
+    --color-text-secondary: #475569; /* 보조 텍스트(그레이) */
+    --color-border-light: #E2E8F0; /* 연한 테두리·헤더 백그라운드 */
+    --color-background: #FFFFFF; /* 카드나 폼 등 주요 콘텐츠 백그라운드 */
+
+    --font-sans-kr: 'Noto Sans KR', sans-serif;
+    --font-sans-en: 'Roboto', sans-serif;
+    --radius-base: 8px; /* 기본 둥근 모서리 */
+    --shadow-base: 0 2px 8px rgba(0, 0, 0, 0.1); /* 기본 그림자 */
+}
+
+/* 1) 전역 초기화 */
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* 2) body 기본 스타일 */
+body {
+    font-family: var(--font-sans-kr);
+    background-color: var(--color-secondary-light);
+    color: var(--color-text-primary);
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+/* 3) a 태그 기본 스타일 */
+a {
+    color: var(--color-accent);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+    a:hover {
+        color: var(--color-accent-dark);
+    }
+
+/* 4) 헤더(네비게이션 바) 스타일 */
+header {
+    background-color: var(--color-primary-dark);
+    color: #FFF;
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--shadow-base);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+    /* 헤더 로고 텍스트 */
+    header .nav-logo {
+        font-size: 1.5rem;
+        font-family: var(--font-sans-en);
+        font-weight: 600;
+    }
+
+    /* 네비게이션 메뉴 */
+    header nav ul.nav-menu {
+        list-style: none;
+        display: flex;
+        gap: 1.5rem;
+    }
+
+        /* 메뉴 아이템 */
+        header nav ul.nav-menu li a {
+            color: #FFF;
+            font-size: 1rem;
+            transition: color 0.2s;
+        }
+
+            header nav ul.nav-menu li a:hover {
+                color: var(--color-accent);
+            }
+
+/* 5) 푸터 스타일 */
+footer {
+    background-color: var(--color-primary-dark);
+    color: #D1D5DB;
+    text-align: center;
+    padding: 1rem 0;
+    font-size: 0.9rem;
+    margin-top: 2rem;
+}
+
+/* 6) 버튼 공통 스타일 */
+.button,
+.btn {
+    font-family: var(--font-sans-en);
+    background-color: var(--color-accent);
+    color: #FFF;
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+    .button:hover,
+    .btn:hover {
+        background-color: var(--color-accent-dark);
+    }
+
+    .button:active,
+    .btn:active {
+        transform: scale(0.98);
+    }
+
+/* 7) 카드 컴포넌트 */
+.card {
+    background-color: var(--color-background);
+    border-radius: var(--radius-base);
+    box-shadow: var(--shadow-base);
+    padding: 1rem;
+}
+
+/* 8) 입력 폼 요소 공통 스타일 */
+input[type="text"],
+input[type="password"],
+input[type="email"],
+textarea,
+select {
+    width: 100%;
+    padding: 0.6rem;
+    border: 1px solid var(--color-border-light);
+    border-radius: 6px;
+    font-size: 1rem;
+    font-family: var(--font-sans-kr);
+    color: var(--color-text-primary);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+        outline: none;
+        border-color: var(--color-accent);
+        box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.25);
+    }
+
+/* 9) 모달(팝업) 공통 스타일 */
+.modal {
+    display: none; /* JS로 열 때 flex나 block으로 변경 */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.modal-content {
+    background-color: var(--color-background);
+    border-radius: var(--radius-base);
+    box-shadow: var(--shadow-base);
+    padding: 1.5rem 2rem;
+    width: 90%;
+    max-width: 500px;
+    position: relative;
+}
+
+.close {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    font-size: 1.2rem;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+    .close:hover {
+        color: var(--color-text-primary);
+    }
+
+/* 10) 테이블 공통 스타일 */
+.table-container {
+    overflow-x: auto;
+    margin-top: 1rem;
+}
+
+.table-wrapper {
+    min-width: 600px; /* 모바일 가로 스크롤 방지용 최소 너비 */
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: var(--color-background);
+    border-radius: var(--radius-base);
+    overflow: hidden;
+    box-shadow: var(--shadow-base);
+}
+
+thead {
+    background-color: var(--color-border-light);
+}
+
+th,
+td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    color: var(--color-text-primary);
+}
+
+th {
+    font-weight: 600;
+    font-family: var(--font-sans-en);
+    font-size: 0.95rem;
+}
+
+tbody tr:nth-child(even) {
+    background-color: #F8FAFC;
+}
+
+tbody tr:hover {
+    background-color: #E2E8F0;
+}
+
+tbody td:last-child {
+    text-align: center; /* 마지막 액션 버튼 열은 센터 정렬 */
+}
+
+/* 11) 그리드 레이아웃 유틸 */
+.grid-cols-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.grid-cols-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.grid-cols-auto {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+/* 12) 공통 유틸 클래스 */
+.text-center {
+    text-align: center;
+}
+
+.mt-1 {
+    margin-top: 0.5rem;
+}
+
+.mt-2 {
+    margin-top: 1rem;
+}
+
+.mt-3 {
+    margin-top: 1.5rem;
+}
+
+.mb-1 {
+    margin-bottom: 0.5rem;
+}
+
+.mb-2 {
+    margin-bottom: 1rem;
+}
+
+.mb-3 {
+    margin-bottom: 1.5rem;
+}
+
+/* 13) 반응형 간단 조정 (필요 시 추가) */
+@media (max-width: 768px) {
+    header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .grid-cols-2,
+    .grid-cols-3 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ───────────────────────────────────────────────────────────────────── */

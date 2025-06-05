@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">  <!-- 이 줄이 중요! -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT 센서 실시간 모니터링</title>
+    <script src="https://unpkg.com/@microsoft/signalr@latest/dist/browser/signalr.min.js"></script>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 20px; 
+            background-color: #f5f5f5;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .sensor-data { 
+            background: white; 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 4px solid #007bff;
+        }
+        .heartbeat { 
+            color: #28a745; 
+            background: white;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border-left: 4px solid #28a745;
+        }
+        .alert { 
+            color: #dc3545; 
+            font-weight: bold; 
+            background: #f8d7da;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #f5c6cb;
+        }
+        #status { 
+            padding: 15px; 
+            margin: 15px 0; 
+            border-radius: 8px; 
+            text-align: center;
+            font-weight: bold;
+        }
+        .connected { 
+            background-color: #d4edda; 
+            color: #155724; 
+            border: 1px solid #c3e6cb;
+        }
+        .disconnected { 
+            background-color: #f8d7da; 
+            color: #721c24; 
+            border: 1px solid #f5c6cb;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .btn:hover { background-color: #0056b3; }
+        .section {
+            background: white;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .section h2 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .data-item {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            background: #f8f9fa;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 IoT 센서 실시간 모니터링</h1>
+        
+        <div id="status" class="disconnected">연결 중...</div>
+        
+        <div style="text-align: center; margin: 20px 0;">
+            <button class="btn" onclick="subscribeToSensor()">센서 1 구독</button>
+            <button class="btn" onclick="joinDashboard()">대시보드 참여</button>
+            <button class="btn" onclick="clearData()">데이터 초기화</button>
+        </div>
+        
+        <div class="section">
+            <h2>📊 실시간 센서 데이터</h2>
+            <div id="sensorData"></div>
+        </div>
+        
+        <div class="section">
+            <h2>💓 하트비트</h2>
+            <div id="heartbeats"></div>
+        </div>
+        
+        <div class="section">
+            <h2>🚨 알림</h2>
+            <div id="alerts"></div>
+        </div>
+    </div>
+
+    <script>
+        // SignalR 연결 생성
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/sensorHub")
+            .configureLogging(signalR.LogLevel.Information)
+            .build();
+
+        // 연결 상태 업데이트
+        function updateStatus(message, isConnected) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = isConnected ? 'connected' : 'disconnected';
+        }
+
+        // 데이터 초기화 함수
+        function clearData() {
+            document.getElementById('sensorData').innerHTML = '';
+            document.getElementById('heartbeats').innerHTML = '';
+            document.getElementById('alerts').innerHTML = '';
+        }
+
+        // 연결 이벤트
+        connection.on("Connected", function (data) {
+            updateStatus(`✅ 연결됨 (ID: ${data.connectionId})`, true);
+            console.log("SignalR 연결됨:", data);
+        });
+
+        // 센서 데이터 수신
+        connection.on("SensorDataReceived", function (sensorData) {
+            const dataDiv = document.getElementById('sensorData');
+            const newData = document.createElement('div');
+            newData.className = 'sensor-data';
+            
+            // 데이터 파싱
+            let displayData = '';
+            if (sensorData.data) {
+                if (sensorData.data.temperature !== undefined) {
+                    displayData += `온도: ${sensorData.data.temperature}°C `;
+                }
+                if (sensorData.data.humidity !== undefined) {
+                    displayData += `습도: ${sensorData.data.humidity}% `;
+                }
+            }
+            
+            newData.innerHTML = `
+                <div><strong>센서 ${sensorData.sensorId} (${sensorData.sensorUuid})</strong></div>
+                <div>타입: ${sensorData.sensorType}</div>
+                <div>측정값: ${displayData}</div>
+                <div class="data-item">${JSON.stringify(sensorData.data, null, 2)}</div>
+                <div><small>시간: ${new Date(sensorData.timestamp).toLocaleString('ko-KR')}</small></div>
+            `;
+            dataDiv.insertBefore(newData, dataDiv.firstChild);
+            
+            // 최대 10개 항목만 표시
+            while (dataDiv.children.length > 10) {
+                dataDiv.removeChild(dataDiv.lastChild);
+            }
+        });
+
+        // 특정 센서 데이터 업데이트
+        connection.on("SensorDataUpdated", function (data) {
+            console.log(`센서 ${data.sensorId} 데이터 업데이트:`, data);
+        });
+
+        // 하트비트 수신
+        connection.on("HeartbeatReceived", function (data) {
+            const heartbeatDiv = document.getElementById('heartbeats');
+            const newHeartbeat = document.createElement('div');
+            newHeartbeat.className = 'heartbeat';
+            newHeartbeat.innerHTML = `💓 센서 ${data.sensorId} - ${new Date(data.lastHeartbeat).toLocaleString('ko-KR')}`;
+            heartbeatDiv.insertBefore(newHeartbeat, heartbeatDiv.firstChild);
+            
+            while (heartbeatDiv.children.length > 5) {
+                heartbeatDiv.removeChild(heartbeatDiv.lastChild);
+            }
+        });
+
+        // 센서 상태 변경
+        connection.on("SensorStatusChanged", function (data) {
+            console.log(`센서 ${data.sensorId} 상태 변경: ${data.status}`);
+        });
+
+        // 알림 수신
+        connection.on("AlertReceived", function (alert) {
+            const alertDiv = document.getElementById('alerts');
+            const newAlert = document.createElement('div');
+            newAlert.className = 'alert';
+            newAlert.innerHTML = `🚨 ${JSON.stringify(alert)} - ${new Date().toLocaleString('ko-KR')}`;
+            alertDiv.insertBefore(newAlert, alertDiv.firstChild);
+        });
+
+        // 구독 확인
+        connection.on("SubscriptionConfirmed", function (data) {
+            console.log("구독 확인:", data);
+            alert(data.message);
+        });
+
+        // 센서 구독 함수
+        function subscribeToSensor() {
+            connection.invoke("SubscribeToSensor", 1)
+                .catch(function (err) {
+                    console.error("센서 구독 실패:", err);
+                });
+        }
+
+        // 대시보드 참여 함수
+        function joinDashboard() {
+            connection.invoke("JoinDashboard")
+                .catch(function (err) {
+                    console.error("대시보드 참여 실패:", err);
+                });
+        }
+
+        // 연결 시작
+        connection.start()
+            .then(function () {
+                updateStatus("🔗 SignalR 연결 성공!", true);
+            })
+            .catch(function (err) {
+                updateStatus("❌ 연결 실패: " + err, false);
+                console.error("SignalR 연결 실패:", err);
+            });
+
+        // 연결 끊김 처리
+        connection.onclose(function () {
+            updateStatus("❌ 연결이 끊어졌습니다.", false);
+        });
+    </script>
+</body>
+</html>

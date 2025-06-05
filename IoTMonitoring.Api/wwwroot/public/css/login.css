@@ -1,0 +1,195 @@
+/* CSS 변수 */
+:root {
+    --color-primary: #6c5ce7;
+    --color-secondary: #a29bfe;
+    --bg-gradient: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    --text-light: #ffffff;
+    --radius: 12px;
+    --transition: 0.3s ease;
+    --overlay-color: rgba(0, 0, 0, 0.35);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+}
+
+/* 배경 초기 스타일 */
+body {
+    background-color: #2d3436;
+    background-image: var(--bg-gradient);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-image 0.5s ease-in-out;
+}
+
+    body::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: var(--overlay-color);
+        pointer-events: none;
+        z-index: 0;
+    }
+
+/* 로그인 컨테이너 */
+.login-container {
+    position: relative;
+    z-index: 1;
+    width: 90%;
+    max-width: 360px;
+    padding: 2rem;
+    background: rgba(255,255,255,0.1);
+    border-radius: var(--radius);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    color: var(--text-light);
+    animation: fadeInCard var(--transition) 0.2s both;
+}
+
+@keyframes fadeInCard {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+    .login-header h1 {
+        font-size: 1.75rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+
+    .login-header p {
+        font-size: 0.9rem;
+        color: rgba(255,255,255,0.8);
+    }
+
+/* 에러 메시지 */
+.error-message {
+    background: rgba(248, 215, 218, 0.8);
+    color: #721c24;
+    padding: 0.75rem;
+    border-radius: var(--radius);
+    margin-bottom: 1rem;
+    display: none;
+    font-size: 0.9rem;
+}
+
+/* 입력 필드 & 플로팅 라벨 */
+.form-group {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+    .form-group input {
+        width: 100%;
+        padding: 1rem 0.75rem;
+        font-size: 1rem;
+        border: 2px solid rgba(255,255,255,0.6);
+        border-radius: var(--radius);
+        background: transparent;
+        color: var(--text-light);
+        transition: border-color var(--transition);
+    }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--color-secondary);
+        }
+
+    .form-group label {
+        position: absolute;
+        top: 50%;
+        left: 0.75rem;
+        transform: translateY(-50%);
+        background: rgba(255,255,255,0.1);
+        padding: 0 0.25rem;
+        color: rgba(255,255,255,0.7);
+        pointer-events: none;
+        font-size: 1rem;
+        transition: transform var(--transition), font-size var(--transition), top var(--transition);
+    }
+
+    .form-group input:focus + label,
+    .form-group input:not(:placeholder-shown) + label {
+        top: -0.6rem;
+        font-size: 0.75rem;
+        color: var(--text-light);
+    }
+
+/* 체크박스 */
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.8);
+}
+
+    .checkbox-group input {
+        width: auto;
+        cursor: pointer;
+    }
+
+/* 로그인 버튼 */
+.login-btn {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-light);
+    background: var(--bg-gradient);
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    transition: transform var(--transition), box-shadow var(--transition);
+}
+
+    .login-btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+
+    .login-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+/* 데모 정보 */
+.demo-info {
+    margin-top: 1.5rem;
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.7);
+    line-height: 1.4;
+}
+
+    .demo-info strong {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--text-light);
+    }

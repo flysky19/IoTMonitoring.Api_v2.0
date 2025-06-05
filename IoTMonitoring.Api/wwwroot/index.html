@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT 모니터링 시스템</title>
+</head>
+<body>
+    <script>
+        // 토큰이 있으면 대시보드로, 없으면 로그인으로
+        if (localStorage.getItem('authToken')) {
+            window.location.href = '/dashboard.html';
+        } else {
+            window.location.href = '/login.html';
+        }
+    </script>
+</body>
+</html>

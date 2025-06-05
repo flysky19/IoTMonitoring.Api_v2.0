@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT 모니터링 시스템 - 로그인</title>
+    <!-- 구글 폰트 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+    <!-- 공통 CSS (모든 페이지에 동일하게) -->
+    <link rel="stylesheet" href="public/css/common.css" />
+    <!-- 로그인 페이지 전용 CSS -->
+    <link rel="stylesheet" href="public/css/login.css" />
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>🌐 IoT 모니터링 시스템</h1>
+            <p>로그인하여 시스템에 접속하세요</p>
+        </div>
+        <!-- 에러 메시지 박스 -->
+        <div id="errorMessage" class="error-message"></div>
+        <form id="loginForm" autocomplete="off">
+            <div class="form-group">
+                <input type="text" id="username" name="username" required placeholder=" " autocomplete="username" />
+                <label for="username">사용자명</label>
+            </div>
+            <div class="form-group">
+                <input type="password" id="password" name="password" required placeholder=" " autocomplete="current-password" />
+                <label for="password">비밀번호</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="rememberMe" name="rememberMe" />
+                <label for="rememberMe">계정 정보 저장하기</label>
+            </div>
+            <button type="submit" id="loginBtn" class="login-btn">로그인</button>
+        </form>
+        <div class="demo-info">
+            <strong>데모 계정:</strong>
+            기본 관리자 계정: <code>admin</code> / <code>11111111</code><br />
+            계정 정보를 저장하면 다음번에 자동으로 입력됩니다.
+        </div>
+    </div>
+
+    <script src="public/js/common.js"></script>
+    <script src="public/js/login.js"></script>
+</body>
+</html>
