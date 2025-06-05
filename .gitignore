@@ -396,3 +396,22 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+
+# 민감한 정보가 있는 파일들
+appsettings.Local.json
+appsettings.Production.json
+appsettings.*.json
+!appsettings.json
+!appsettings.Development.json
+
+# User Secrets
+secrets.json
+
+# 환경 변수 파일
+.env
+*.env
+
+# Azure 게시 프로필
+*.pubxml
+*.pubxml.user
