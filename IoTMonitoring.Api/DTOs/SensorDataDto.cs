@@ -7,12 +7,12 @@ namespace IoTMonitoring.Api.DTOs
         public long DataID { get; set; }
         public int SensorID { get; set; }
         public DateTime Timestamp { get; set; }
+        public float? PM0_3 { get; set; }
+        public float? PM0_5 { get; set; }
         public float? PM1_0 { get; set; }
         public float? PM2_5 { get; set; }
-        public float? PM4_0 { get; set; }
-        public float? PM10_0 { get; set; }
-        public float? PM_0_5 { get; set; }
-        public float? PM_5_0 { get; set; }
+        public float? PM5_0 { get; set; }
+        public float? PM10 { get; set; }
         public string RawData { get; set; }
     }
 
@@ -44,12 +44,12 @@ namespace IoTMonitoring.Api.DTOs
 
         public DateTime Timestamp { get; set; }
 
+        public float? PM0_3 { get; set; }
+        public float? PM0_5 { get; set; }
         public float? PM1_0 { get; set; }
         public float? PM2_5 { get; set; }
-        public float? PM4_0 { get; set; }
-        public float? PM10_0 { get; set; }
-        public float? PM_0_5 { get; set; }
-        public float? PM_5_0 { get; set; }
+        public float? PM5_0 { get; set; }
+        public float? PM10 { get; set; }
         public string RawData { get; set; }
     }
 

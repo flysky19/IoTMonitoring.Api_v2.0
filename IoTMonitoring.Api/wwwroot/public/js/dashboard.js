@@ -19,7 +19,7 @@ let historyChart = null;
 
 // 센서 타입 정보
 const sensorTypeInfo = {
-    'particle': { icon: '💨', name: '미세먼지 센서', unit: '㎍/㎥' },
+    'particle': { icon: '💨', name: '미세먼지 센서', unit: 'P-Counter' },
     'temp_humidity': { icon: '🌡️', name: '온습도 센서', unit: '°C / %' },
     'wind': { icon: '🌪️', name: '풍속 센서', unit: 'm/s' },
     'speaker': { icon: '🔊', name: '스피커', unit: '' }
@@ -138,16 +138,16 @@ async function checkAuthentication() {
         }
 
         // 토큰 만료 확인
-        if (userInfo.expiration) {
-            const expirationDate = new Date(userInfo.expiration);
-            const now = new Date();
+        //if (userInfo.expiration) {
+        //    const expirationDate = new Date(userInfo.expiration);
+        //    const now = new Date();
 
-            if (expirationDate < now) {
-                console.log('토큰이 만료되었습니다');
-                localStorage.clear();
-                return null;
-            }
-        }
+        //    if (expirationDate < now) {
+        //        console.log('토큰이 만료되었습니다');
+        //        localStorage.clear();
+        //        return null;
+        //    }
+        //}
 
         console.log('인증 성공!');
         return token;
@@ -318,6 +318,7 @@ function setupEventListeners() {
     });
 
     // 세션 타임아웃 체크 (5분마다)
+    /*
     setInterval(async () => {
         const token = await checkAuthentication();
         if (!token) {
@@ -330,6 +331,7 @@ function setupEventListeners() {
             }, 2000);
         }
     }, 5 * 60 * 1000); // 5분
+    */
 }
 
 async function getSyncFusionLicense() {
@@ -601,12 +603,28 @@ function createSensorCard(sensor) {
             case 'particle':
                 dataHtml = `
                     <div class="data-item">
+                        <div class="data-label">PM0.3</div>
+                        <div class="data-value ${getPMLevel(sensor.latestData.pm0_3)}</div>
+                    </div>
+                    <div class="data-item">
+                        <div class="data-label">PM0.5</div>
+                        <div class="data-value ${getPMLevel(sensor.latestData.pm0_5)}">${sensor.latestData.pm0_5 || '--'}</div>
+                    </div>
+                    <div class="data-item">
+                        <div class="data-label">PM1.0</div>
+                        <div class="data-value ${getPMLevel(sensor.latestData.pm1_0)}">${sensor.latestData.pm1_0 || '--'}</div>
+                    </div>
+                    <div class="data-item">
                         <div class="data-label">PM2.5</div>
                         <div class="data-value ${getPMLevel(sensor.latestData.pm2_5)}">${sensor.latestData.pm2_5 || '--'}</div>
                     </div>
                     <div class="data-item">
+                        <div class="data-label">PM5.0</div>
+                        <div class="data-value ${getPMLevel(sensor.latestData.pm5_0)}">${sensor.latestData.pm5_0 || '--'}</div>
+                    </div>
+                    <div class="data-item">
                         <div class="data-label">PM10</div>
-                        <div class="data-value ${getPMLevel(sensor.latestData.pm10_0)}">${sensor.latestData.pm10_0 || '--'}</div>
+                        <div class="data-value ${getPMLevel(sensor.latestData.pm10)}">${sensor.latestData.pm10 || '--'}</div>
                     </div>
                 `;
                 break;
@@ -764,9 +782,12 @@ function displayRawDataGrid(data) {
             break;
         case 'particle':
             columns.push(
+                { field: 'pm0_3', headerText: 'PM0.3', width: 100, format: 'N2' },
+                { field: 'pm0_5', headerText: 'PM0.5', width: 100, format: 'N2' },
                 { field: 'pm1_0', headerText: 'PM1.0', width: 100, format: 'N2' },
                 { field: 'pm2_5', headerText: 'PM2.5', width: 100, format: 'N2' },
-                { field: 'pm10_0', headerText: 'PM10', width: 100, format: 'N2' }
+                { field: 'pm5_0', headerText: 'PM5.0', width: 100, format: 'N2' },
+                { field: 'pm10', headerText: 'PM10', width: 100, format: 'N2' }
             );
             break;
         case 'wind':
@@ -891,14 +912,38 @@ function displayHistoryChart(data) {
             break;
         case 'particle':
             datasets.push({
-                label: 'PM2.5',
-                data: data.map(item => item.pm2_5),
+                label: 'PM0.3',
+                data: data.map(item => item.pm0_3),
                 borderColor: 'rgb(255, 206, 86)',
                 backgroundColor: 'rgba(255, 206, 86, 0.1)'
             });
             datasets.push({
+                label: 'PM0.5',
+                data: data.map(item => item.pm0_5),
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.1)'
+            });
+            datasets.push({
+                label: 'PM1.0',
+                data: data.map(item => item.pm1_0),
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.1)'
+            });
+            datasets.push({
+                label: 'PM2.5',
+                data: data.map(item => item.pm2_5),
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.1)'
+            });
+            datasets.push({
+                label: 'PM5.0',
+                data: data.map(item => item.pm5_0),
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.1)'
+            });
+            datasets.push({
                 label: 'PM10',
-                data: data.map(item => item.pm10_0),
+                data: data.map(item => item.pm10),
                 borderColor: 'rgb(75, 192, 192)',
                 backgroundColor: 'rgba(75, 192, 192, 0.1)'
             });
@@ -1014,6 +1059,7 @@ async function initializeSignalR(token) {
     connection.on("SensorDataReceived", onSensorDataReceived);
     connection.on("SensorStatusChanged", onSensorStatusChanged);
     connection.on("AlertTriggered", onAlertTriggered);
+    connection.on("HeartbeatReceived", onHeartbeatTriggered);
 
     // Connection state handlers
     connection.onreconnecting(() => {
@@ -1058,6 +1104,10 @@ function onSensorDataReceived(data) {
         sensor.latestData = data.data;
         sensor.lastCommunication = new Date();
         updateSensorCard(sensor);
+        addEventLog('data',
+            `센서 되었습니다.`,
+            sensor.name
+        );
     }
 }
 
@@ -1071,6 +1121,15 @@ function onSensorStatusChanged(data) {
             `센서 ${sensor.name}이(가) ${data.status === 'online' ? '연결' : '연결 해제'}되었습니다.`,
             sensor.name
         );
+    }
+}
+
+function onHeartbeatTriggered(data) {
+   const sensor = sensors.find(s => s.sensorID === data.sensorId);
+    if (sensor) {
+        sensor.latestData = data.data;
+        sensor.lastCommunication = new Date();
+        updateSensorCard(sensor);
     }
 }
 

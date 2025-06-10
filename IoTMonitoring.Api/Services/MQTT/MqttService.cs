@@ -286,21 +286,26 @@ namespace IoTMonitoring.Api.Services.MQTT
                         break;
 
                     case "particle":
-                        var particleDto = new ParticleDataCreateDto
+                        if (data.TryGetProperty("data", out var sensorData))
                         {
-                            SensorID = sensor.SensorID,
-                            Timestamp = data.TryGetProperty("timestamp", out var timestampProp2)
+                            var particleDto = new ParticleDataCreateDto
+                            {
+                                SensorID = sensor.SensorID,
+                                Timestamp = data.TryGetProperty("timestamp", out var timestampProp2)
                                 ? DateTime.Parse(timestampProp2.GetString())
                                 : DateTime.UtcNow,
-                            PM1_0 = data.TryGetProperty("pm1_0", out var pm1Prop) ? pm1Prop.GetSingle() : null,
-                            PM2_5 = data.TryGetProperty("pm2_5", out var pm25Prop) ? pm25Prop.GetSingle() : null,
-                            PM4_0 = data.TryGetProperty("pm4_0", out var pm4Prop) ? pm4Prop.GetSingle() : null,
-                            PM10_0 = data.TryGetProperty("pm10_0", out var pm10Prop) ? pm10Prop.GetSingle() : null,
-                            PM_0_5 = data.TryGetProperty("pm_0_5", out var pm05Prop) ? pm05Prop.GetSingle() : null,
-                            PM_5_0 = data.TryGetProperty("pm_5_0", out var pm50Prop) ? pm50Prop.GetSingle() : null,
-                            RawData = payload
-                        };
-                        await repository.AddParticleDataAsync(particleDto);
+                                PM0_3 = sensorData.TryGetProperty("pm0_3", out var pm03Prop) ? pm03Prop.GetSingle() : null,
+                                PM0_5 = sensorData.TryGetProperty("pm0_5", out var pm05Prop) ? pm05Prop.GetSingle() : null,
+                                PM1_0 = sensorData.TryGetProperty("pm1_0", out var pm10Prop) ? pm10Prop.GetSingle() : null,
+                                PM2_5 = sensorData.TryGetProperty("pm2_5", out var pm25Prop) ? pm25Prop.GetSingle() : null,
+                                PM5_0 = sensorData.TryGetProperty("pm5_0", out var pm50Prop) ? pm50Prop.GetSingle() : null,
+                                PM10 = sensorData.TryGetProperty("pm10", out var pm100Prop) ? pm100Prop.GetSingle() : null,
+                                RawData = payload
+                            };
+
+                            await repository.AddParticleDataAsync(particleDto);
+                        }
+
                         break;
 
                     case "wind":

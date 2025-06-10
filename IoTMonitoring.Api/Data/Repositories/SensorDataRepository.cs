@@ -109,13 +109,13 @@ namespace IoTMonitoring.Api.Data.Repositories
             {
                 const string sql = @"
                     INSERT INTO ParticleData (
-                        SensorID, Timestamp, PM1_0, PM2_5, PM4_0, PM10_0, PM_0_5, PM_5_0, RawData
+                        SensorID, Timestamp, PM0_3, PM0_5, PM1_0, PM2_5, PM5_0, PM10, RawData
                     ) 
                     OUTPUT INSERTED.DataID, INSERTED.SensorID, INSERTED.Timestamp,
-                           INSERTED.PM1_0, INSERTED.PM2_5, INSERTED.PM4_0, INSERTED.PM10_0,
-                           INSERTED.PM_0_5, INSERTED.PM_5_0, INSERTED.RawData
+                           INSERTED.PM0_3, INSERTED.PM0_5, INSERTED.PM1_0, INSERTED.PM2_5,
+                           INSERTED.PM5_0, INSERTED.PM10, INSERTED.RawData
                     VALUES (
-                        @SensorID, GETDATE(), @PM1_0, @PM2_5, @PM4_0, @PM10_0, @PM_0_5, @PM_5_0, @RawData
+                        @SensorID, GETDATE(), @PM0_3, @PM0_5, @PM1_0, @PM2_5, @PM5_0, @PM10, @RawData
                     )";
 
                 return await connection.QuerySingleAsync<ParticleDataDto>(sql, dataDto);
@@ -156,7 +156,7 @@ namespace IoTMonitoring.Api.Data.Repositories
         {
             return @"
                 SELECT TOP(@Limit)
-                    DataID, SensorID, Timestamp, PM1_0, PM2_5, PM4_0, PM10_0, PM_0_5, PM_5_0
+                    DataID, SensorID, Timestamp, PM0_3, PM0_5, PM1_0, PM2_5, PM5_0, PM10
                 FROM ParticleData
                 WHERE SensorID = @SensorId 
                   AND Timestamp >= @StartDate 
@@ -170,12 +170,12 @@ namespace IoTMonitoring.Api.Data.Repositories
                 SELECT 
                     SensorID,
                     DATEADD(HOUR, DATEDIFF(HOUR, 0, Timestamp), 0) as Timestamp,
+                    AVG(PM0_3) as PM0_3,
+                    AVG(PM0_5) as PM0_5,
                     AVG(PM1_0) as PM1_0,
                     AVG(PM2_5) as PM2_5,
-                    AVG(PM4_0) as PM4_0,
-                    AVG(PM10_0) as PM10_0,
-                    AVG(PM_0_5) as PM_0_5,
-                    AVG(PM_5_0) as PM_5_0,
+                    AVG(PM5_0) as PM5_0,
+                    AVG(PM10) as PM10,
                     COUNT(*) as DataCount
                 FROM ParticleData
                 WHERE SensorID = @SensorId 
@@ -191,12 +191,12 @@ namespace IoTMonitoring.Api.Data.Repositories
                 SELECT 
                     SensorID,
                     CAST(Timestamp as DATE) as Timestamp,
+                    AVG(PM0_3) as PM0_3,
+                    AVG(PM0_5) as PM0_5,
                     AVG(PM1_0) as PM1_0,
                     AVG(PM2_5) as PM2_5,
-                    AVG(PM4_0) as PM4_0,
-                    AVG(PM10_0) as PM10_0,
-                    AVG(PM_0_5) as PM_0_5,
-                    AVG(PM_5_0) as PM_5_0,
+                    AVG(PM5_0) as PM5_0,
+                    AVG(PM10) as PM10,
                     COUNT(*) as DataCount
                 FROM ParticleData
                 WHERE SensorID = @SensorId 
