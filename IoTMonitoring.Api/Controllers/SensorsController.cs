@@ -100,8 +100,8 @@ namespace IoTMonitoring.Api.Controllers
 
                 var request = new SensorDataRequestDto
                 {
-                    StartDate = startDate ?? DateTime.UtcNow.AddDays(-1), // 기본: 1일 전부터
-                    EndDate = endDate ?? DateTime.UtcNow, // 기본: 현재까지
+                    StartDate = startDate ?? DateTime.Now.AddDays(-1), // 기본: 1일 전부터
+                    EndDate = endDate ?? DateTime.Now, // 기본: 현재까지
                     Limit = limit,
                     AggregationType = aggregationType
                 };

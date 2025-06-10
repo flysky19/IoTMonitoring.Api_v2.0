@@ -326,12 +326,12 @@ body {
 
 /* ===== Toolbar ===== */
 .toolbar {
-    background-color: var(--card-bg);
-    border-bottom: 1px solid var(--border-color);
-    padding: 0.75rem 1.5rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .toolbar-left,
@@ -340,6 +340,41 @@ body {
     gap: 0.5rem;
     align-items: center;
 }
+
+.connection-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    font-size: 0.875rem;
+}
+
+    .connection-status.connected {
+        background: rgba(76, 175, 80, 0.2);
+        color: #4CAF50;
+    }
+
+    .connection-status.reconnecting {
+        background: rgba(255, 152, 0, 0.2);
+        color: #FF9800;
+    }
+
+    .connection-status.disconnected {
+        background: rgba(244, 67, 54, 0.2);
+        color: #F44336;
+    }
+
+    .connection-status i {
+        margin-right: 0.5rem;
+    }
+
+.toolbar-center {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
 
 .view-switcher {
     display: flex;
@@ -405,13 +440,34 @@ body {
             opacity: 0.1;
         }
 
+    /* 센서 카드 온라인 상태 강조 */
     .sensor-card.offline {
-        opacity: 0.7;
+        opacity: 0.5;
+        background: rgba(255, 255, 255, 0.02);
     }
+
+        .sensor-card.offline .sensor-data {
+            filter: grayscale(100%);
+        }
 
         .sensor-card.offline::before {
             background-color: var(--danger-color);
         }
+
+    .sensor-card.data-updated {
+        animation: dataUpdate 1s ease-out;
+    }
+
+    /* 데이터 업데이트 애니메이션 */
+    @keyframes dataUpdate {
+    0% {
+        background-color: rgba(33, 150, 243, 0.3);
+    }
+
+    100% {
+        background-color: transparent;
+    }
+}
 
 .sensor-header {
     display: flex;
@@ -1062,6 +1118,84 @@ body {
         display: none;
     }
 }
+
+.polling-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background: rgba(33, 150, 243, 0.2);
+    color: #2196F3;
+    border-radius: 4px;
+    font-size: 0.875rem;
+}
+
+    .polling-status.active {
+        background: rgba(33, 150, 243, 0.2);
+        color: #2196F3;
+    }
+
+    .polling-status.connected {
+        background: rgba(76, 175, 80, 0.2);
+        color: #4CAF50;
+    }
+
+    .polling-status.disconnected {
+        background: rgba(244, 67, 54, 0.2);
+        color: #F44336;
+    }
+
+    .polling-status i {
+        margin-right: 0.5rem;
+    }
+
+    .polling-interval-control {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-right: 1rem;
+    }
+
+    .polling-interval-control label {
+        font-size: 0.875rem;
+        color: #999;
+    }
+
+    .polling-interval-control select {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #fff;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        min-width: 80px;
+    }
+
+    .polling-interval-control select:focus {
+        outline: none;
+        border-color: #2196F3;
+        box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+    }
+
+    .polling-controls {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-right: 1rem;
+    }
+
+    .polling-controls select {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #fff;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.875rem;
+    }
+
+        .polling-controls select:focus {
+            outline: none;
+            border-color: #2196F3;
+        }
 
 /* ===== Utility Classes ===== */
 .hidden {

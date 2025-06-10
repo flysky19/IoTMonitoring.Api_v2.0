@@ -25,6 +25,12 @@ const sensorTypeInfo = {
     'speaker': { icon: '🔊', name: '스피커', unit: '' }
 };
 
+// ===== Global Variables에 추가 =====
+let pollingInterval = null;
+let pollingIntervalTime = 5000; // 30초 (기본값)
+let isPollingEnabled = true;
+let lastPollingTime = null;
+
 // ===== Initialize =====
 document.addEventListener('DOMContentLoaded', async function () {
     console.log('Dashboard 초기화 시작');
@@ -60,6 +66,8 @@ document.addEventListener('DOMContentLoaded', async function () {
         // 데이터 로드
         await loadInitialData();
 
+        startDataPolling();
+
         // SignalR 연결
         await initializeSignalR(token);
 
@@ -76,6 +84,198 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
     }
 });
+
+/**
+ * 데이터 폴링 시작
+ */
+function startDataPolling() {
+    
+    // 기존 폴링 중지
+    stopDataPolling();
+    
+    // 즉시 한 번 실행
+    pollSensorData();
+
+    // 새 폴링 시작
+    pollingInterval = setInterval(async () => {
+        if (document.hidden) {
+            // 브라우저 탭이 비활성 상태면 폴링 스킵
+            return;
+        }
+        
+        await pollSensorData();
+    }, pollingIntervalTime);
+    
+    console.log(`데이터 폴링 시작 - 주기: ${pollingIntervalTime/1000}초`);
+}
+
+/**
+ * 데이터 폴링 중지
+ */
+function stopDataPolling() {
+    if (pollingInterval) {
+        clearInterval(pollingInterval);
+        pollingInterval = null;
+        console.log('데이터 폴링 중지');
+    }
+}
+
+/**
+ * 센서 데이터 폴링
+ */
+async function pollSensorData() {
+    try {
+        const startTime = Date.now();
+        console.log('센서 데이터 폴링 시작...');
+        
+        // 온라인 센서만 필터링
+        const onlineSensors = sensors.filter(sensor => 
+            sensor.connectionStatus === 'online'
+        );
+        
+        if (onlineSensors.length === 0) {
+            console.log('온라인 센서가 없습니다.');
+            return;
+        }
+        
+        console.log(`온라인 센서 ${onlineSensors.length}개 데이터 업데이트 중...`);
+        
+        // 각 온라인 센서의 최신 데이터 가져오기
+        const updatePromises = onlineSensors.map(async (sensor) => {
+            try {
+                const response = await apiCall(
+                    `/api/sensors/${sensor.sensorID}/data?limit=1`
+                );
+                
+                if (response && response.ok) {
+                    const data = await response.json();
+                    if (data && data.length > 0) {
+                        const latestData = data[0];
+                        
+                        // 데이터가 실제로 변경된 경우만 업데이트
+                        if (hasDataChanged(sensor.latestData, latestData)) {
+                            sensor.latestData = latestData;
+                            sensor.lastCommunication = latestData.timestamp;
+                            updateSensorCard(sensor);
+                            
+                            // 데이터 변경 이벤트 로그
+                            addEventLog('data', 
+                                `센서 데이터 업데이트됨`,
+                                sensor.name || `센서 ${sensor.sensorID}`
+                            );
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error(`센서 ${sensor.sensorID} 데이터 폴링 실패:`, error);
+            }
+        });
+        
+        await Promise.all(updatePromises);
+        
+        const endTime = Date.now();
+        const duration = endTime - startTime;
+        
+        lastPollingTime = new Date();
+        updatePollingStatus();
+
+        updateSensorCounts();
+        console.log(`폴링 완료 - 소요시간: ${duration}ms`);
+        
+    } catch (error) {
+        console.error('센서 데이터 폴링 중 오류:', error);
+        showToast({
+            message: 'DB 데이터 업데이트 중 오류가 발생했습니다.',
+            type: 'error'
+        });
+    }
+}
+
+// 센서 수 업데이트 함수
+function updateSensorCounts() {
+      const totalCount = sensors.length;
+    const onlineCount = sensors.filter(s => s.connectionStatus === 'online').length;
+    
+    const totalCountElement = document.getElementById('totalSensorCount');
+    if (totalCountElement) {
+        totalCountElement.textContent = totalCount;
+    }
+    
+    const onlineCountElement = document.getElementById('onlineSensorCount');
+    if (onlineCountElement) {
+        onlineCountElement.textContent = onlineCount;
+    }
+    
+    const lastUpdateElement = document.getElementById('lastUpdateTime');
+    if (lastUpdateElement) {
+        lastUpdateElement.textContent = lastPollingTime ? lastPollingTime.toLocaleTimeString('ko-KR') : '-';
+    }
+}
+
+// 센서 카드 업데이트 시 애니메이션 추가
+function updateSensorCard(sensor) {
+    const card = document.querySelector(`[data-sensor-id="${sensor.sensorID}"]`);
+    if (card) {
+        const newCard = createSensorCard(sensor);
+        newCard.classList.add('data-updated');
+        card.replaceWith(newCard);
+        
+        // 애니메이션 제거
+        setTimeout(() => {
+            newCard.classList.remove('data-updated');
+        }, 1000);
+    }
+}
+
+/**
+ * 데이터 변경 여부 확인
+ */
+function hasDataChanged(oldData, newData) {
+    if (!oldData || !newData) return true;
+    
+    // 타임스탬프는 제외하고 실제 측정값만 비교
+    const oldValues = { ...oldData };
+    const newValues = { ...newData };
+    delete oldValues.timestamp;
+    delete newValues.timestamp;
+    
+    return JSON.stringify(oldValues) !== JSON.stringify(newValues);
+}
+
+/**
+ * 폴링 주기 변경
+ */
+function setPollingInterval(seconds) {
+    pollingIntervalTime = seconds * 1000;
+    
+    // 폴링 재시작
+    startDataPolling();
+    
+    showToast({
+        message: `폴링 주기가 ${seconds}초로 변경되었습니다.`,
+        type: 'info'
+    });
+}
+/**
+ * 폴링 토글
+ */
+function togglePolling() {
+    isPollingEnabled = !isPollingEnabled;
+    
+    if (isPollingEnabled) {
+        startDataPolling();
+        showToast({
+            message: 'DB 폴링이 활성화되었습니다.',
+            type: 'success'
+        });
+    } else {
+        stopDataPolling();
+        showToast({
+            message: 'DB 폴링이 비활성화되었습니다.',
+            type: 'info'
+        });
+    }
+}
 
 // ===== Authentication & Logout =====
 async function checkAuthentication() {
@@ -287,51 +487,120 @@ function initializeComponents() {
 
 // ===== Event Listeners =====
 function setupEventListeners() {
-    // Logout
-    document.getElementById('logoutBtn').addEventListener('click', logout);
+     // Logout
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', logout);
+    }
 
     // Profile
-    document.getElementById('profileBtn').addEventListener('click', () => {
-        window.location.href = '/user-profile.html';
-    });
+    const profileBtn = document.getElementById('profileBtn');
+    if (profileBtn) {
+        profileBtn.addEventListener('click', () => {
+            window.location.href = '/user-profile.html';
+        });
+    }
 
     // Refresh
-    document.getElementById('refreshBtn').addEventListener('click', refreshSensors);
+    const refreshBtn = document.getElementById('refreshBtn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', refreshSensors);
+    }
 
     // View Mode
-    document.getElementById('gridViewBtn').addEventListener('click', () => setViewMode('grid'));
-    document.getElementById('listViewBtn').addEventListener('click', () => setViewMode('list'));
+    const gridViewBtn = document.getElementById('gridViewBtn');
+    if (gridViewBtn) {
+        gridViewBtn.addEventListener('click', () => setViewMode('grid'));
+    }
+
+    const listViewBtn = document.getElementById('listViewBtn');
+    if (listViewBtn) {
+        listViewBtn.addEventListener('click', () => setViewMode('list'));
+    }
 
     // Event Log
-    document.getElementById('clearLogBtn').addEventListener('click', clearEventLog);
-    document.getElementById('pauseLogBtn').addEventListener('click', toggleEventLogPause);
+    const clearLogBtn = document.getElementById('clearLogBtn');
+    if (clearLogBtn) {
+        clearLogBtn.addEventListener('click', clearEventLog);
+    }
+
+    const pauseLogBtn = document.getElementById('pauseLogBtn');
+    if (pauseLogBtn) {
+        pauseLogBtn.addEventListener('click', toggleEventLogPause);
+    }
 
     // Date Range Buttons
-    document.getElementById('loadDataBtn').addEventListener('click', loadRawData);
-    document.getElementById('loadChartBtn').addEventListener('click', loadHistoryChart);
+    const loadDataBtn = document.getElementById('loadDataBtn');
+    if (loadDataBtn) {
+        loadDataBtn.addEventListener('click', loadRawData);
+    }
+
+    const loadChartBtn = document.getElementById('loadChartBtn');
+    if (loadChartBtn) {
+        loadChartBtn.addEventListener('click', loadHistoryChart);
+    }
+
+    // 폴링 관련 이벤트 리스너 (요소가 있는 경우에만)
+    const togglePollingBtn = document.getElementById('togglePollingBtn');
+    if (togglePollingBtn) {
+        togglePollingBtn.addEventListener('click', togglePolling);
+    }
+
+    const pollingIntervalSelect = document.getElementById('pollingIntervalSelect');
+    if (pollingIntervalSelect) {
+        pollingIntervalSelect.addEventListener('change', (e) => {
+            const seconds = parseInt(e.target.value);
+            setPollingInterval(seconds);
+        });
+    }
+
+    // 초기 상태 업데이트 (요소가 있는 경우에만)
+    if (document.getElementById('pollingStatus')) {
+        updatePollingStatus();
+        // 상태 변경 시마다 UI 업데이트
+        setInterval(updatePollingStatus, 1000);
+    }
 
     // 페이지 떠날 때 처리
     window.addEventListener('beforeunload', async (e) => {
+        // 폴링 중지
+        stopDataPolling();
+
         if (connection && connection.state === signalR.HubConnectionState.Connected) {
             await connection.stop();
         }
     });
 
-    // 세션 타임아웃 체크 (5분마다)
-    /*
-    setInterval(async () => {
-        const token = await checkAuthentication();
-        if (!token) {
-            showToast({
-                message: '세션이 만료되었습니다. 다시 로그인해주세요.',
-                type: 'warning'
-            });
-            setTimeout(() => {
-                window.location.href = '/login.html';
-            }, 2000);
+    // 페이지 가시성 변경 감지 (탭 전환 시)
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            // 탭이 비활성화되면 폴링 중지
+            stopDataPolling();
+        } else {
+            // 탭이 활성화되면 폴링 재시작
+            if (typeof isPollingEnabled !== 'undefined' && isPollingEnabled) {
+                startDataPolling();
+            }
         }
-    }, 5 * 60 * 1000); // 5분
-    */
+    });
+}
+
+// ===== 선택적: 폴링 상태 표시 UI =====
+function updatePollingStatus() {
+    const statusElement = document.getElementById('pollingStatus');
+    if (statusElement) {
+        const onlineCount = sensors.filter(s => s.connectionStatus === 'online').length;
+        const lastUpdate = lastPollingTime ? 
+            `마지막 업데이트: ${lastPollingTime.toLocaleTimeString('ko-KR')}` : 
+            '대기 중';
+        
+        statusElement.innerHTML = `
+            <i class="fas fa-database"></i> 
+            DB 폴링 (${pollingIntervalTime/1000}초) | 
+            온라인: ${onlineCount}개 | 
+            ${lastUpdate}
+        `;
+    }
 }
 
 async function getSyncFusionLicense() {
@@ -601,33 +870,50 @@ function createSensorCard(sensor) {
                 `;
                 break;
             case 'particle':
-                dataHtml = `
-                    <div class="data-item">
-                        <div class="data-label">PM0.3</div>
-                        <div class="data-value ${getPMLevel(sensor.latestData.pm0_3)}</div>
-                    </div>
-                    <div class="data-item">
-                        <div class="data-label">PM0.5</div>
-                        <div class="data-value ${getPMLevel(sensor.latestData.pm0_5)}">${sensor.latestData.pm0_5 || '--'}</div>
-                    </div>
-                    <div class="data-item">
-                        <div class="data-label">PM1.0</div>
-                        <div class="data-value ${getPMLevel(sensor.latestData.pm1_0)}">${sensor.latestData.pm1_0 || '--'}</div>
-                    </div>
-                    <div class="data-item">
-                        <div class="data-label">PM2.5</div>
-                        <div class="data-value ${getPMLevel(sensor.latestData.pm2_5)}">${sensor.latestData.pm2_5 || '--'}</div>
-                    </div>
-                    <div class="data-item">
-                        <div class="data-label">PM5.0</div>
-                        <div class="data-value ${getPMLevel(sensor.latestData.pm5_0)}">${sensor.latestData.pm5_0 || '--'}</div>
-                    </div>
-                    <div class="data-item">
-                        <div class="data-label">PM10</div>
-                        <div class="data-value ${getPMLevel(sensor.latestData.pm10)}">${sensor.latestData.pm10 || '--'}</div>
-                    </div>
-                `;
-                break;
+                  // 디버깅을 위한 상세 로그
+                    console.log('Particle sensor data:', sensor.latestData);
+                    if (sensor.latestData) {
+                        console.log('Available fields:', Object.keys(sensor.latestData));
+                    }
+    
+                    // 대소문자 구분 없이 값 가져오기
+                    const getValue = (data, fieldNames) => {
+                        if (!data) return '--';
+                        for (const field of fieldNames) {
+                            if (data[field] !== undefined && data[field] !== null) {
+                                return data[field];
+                            }
+                        }
+                        return '--';
+                    };
+    
+                    dataHtml = `
+                        <div class="data-item">
+                            <div class="data-label">PM0.3</div>
+                            <div class="data-value ${getPMLevel(getValue(sensor.latestData, ['pm0_3', 'PM0_3', 'pM0_3']))}">${getValue(sensor.latestData, ['pm0_3', 'PM0_3', 'pM0_3'])}</div>
+                        </div>
+                        <div class="data-item">
+                            <div class="data-label">PM0.5</div>
+                            <div class="data-value ${getPMLevel(getValue(sensor.latestData, ['pm0_5', 'PM0_5', 'pM0_5']))}">${getValue(sensor.latestData, ['pm0_5', 'PM0_5', 'pM0_5'])}</div>
+                        </div>
+                        <div class="data-item">
+                            <div class="data-label">PM1.0</div>
+                            <div class="data-value ${getPMLevel(getValue(sensor.latestData, ['pm1_0', 'PM1_0', 'pM1_0']))}">${getValue(sensor.latestData, ['pm1_0', 'PM1_0', 'pM1_0'])}</div>
+                        </div>
+                        <div class="data-item">
+                            <div class="data-label">PM2.5</div>
+                            <div class="data-value ${getPMLevel(getValue(sensor.latestData, ['pm2_5', 'PM2_5', 'pM2_5']))}">${getValue(sensor.latestData, ['pm2_5', 'PM2_5', 'pM2_5'])}</div>
+                        </div>
+                        <div class="data-item">
+                            <div class="data-label">PM5.0</div>
+                            <div class="data-value ${getPMLevel(getValue(sensor.latestData, ['pm5_0', 'PM5_0', 'pM5_0']))}">${getValue(sensor.latestData, ['pm5_0', 'PM5_0', 'pM5_0'])}</div>
+                        </div>
+                        <div class="data-item">
+                            <div class="data-label">PM10</div>
+                            <div class="data-value ${getPMLevel(getValue(sensor.latestData, ['pm10', 'PM10', 'pM10']))}">${getValue(sensor.latestData, ['pm10', 'PM10', 'pM10'])}</div>
+                        </div>
+                    `;
+                    break;
             case 'wind':
                 dataHtml = `
                     <div class="data-item">
@@ -926,26 +1212,26 @@ function displayHistoryChart(data) {
             datasets.push({
                 label: 'PM1.0',
                 data: data.map(item => item.pm1_0),
-                borderColor: 'rgb(75, 192, 192)',
-                backgroundColor: 'rgba(75, 192, 192, 0.1)'
+                borderColor: 'rgb(153, 102, 255)',
+                backgroundColor: 'rgba(153, 102, 255, 0.1)'
             });
             datasets.push({
                 label: 'PM2.5',
                 data: data.map(item => item.pm2_5),
-                borderColor: 'rgb(75, 192, 192)',
-                backgroundColor: 'rgba(75, 192, 192, 0.1)'
+                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgba(255, 99, 132, 0.1)'
             });
             datasets.push({
                 label: 'PM5.0',
                 data: data.map(item => item.pm5_0),
-                borderColor: 'rgb(75, 192, 192)',
-                backgroundColor: 'rgba(75, 192, 192, 0.1)'
+                borderColor: 'rgb(54, 162, 235)',
+                backgroundColor: 'rgba(54, 162, 235, 0.1)'
             });
             datasets.push({
                 label: 'PM10',
                 data: data.map(item => item.pm10),
-                borderColor: 'rgb(75, 192, 192)',
-                backgroundColor: 'rgba(75, 192, 192, 0.1)'
+                borderColor: 'rgb(255, 159, 64)',
+                backgroundColor: 'rgba(255, 159, 64, 0.1)'
             });
             break;
         case 'wind':
@@ -1056,10 +1342,10 @@ async function initializeSignalR(token) {
         .build();
 
     // Event handlers
-    connection.on("SensorDataReceived", onSensorDataReceived);
+    //connection.on("SensorDataReceived", onSensorDataReceived);
     connection.on("SensorStatusChanged", onSensorStatusChanged);
     connection.on("AlertTriggered", onAlertTriggered);
-    connection.on("HeartbeatReceived", onHeartbeatTriggered);
+    //connection.on("HeartbeatReceived", onHeartbeatTriggered);
 
     // Connection state handlers
     connection.onreconnecting(() => {
@@ -1067,20 +1353,26 @@ async function initializeSignalR(token) {
             message: '서버와 재연결 중...',
             type: 'warning'
         });
+
+        updateConnectionStatus('reconnecting');
     });
 
     connection.onreconnected(() => {
-        showToast({
-            message: '서버와 재연결되었습니다.',
-            type: 'success'
-        });
+         showToast({
+                message: '서버와 재연결되었습니다. 실시간 모드로 전환합니다.',
+                type: 'success'
+            });
+   
+        updateConnectionStatus('connected');
     });
 
     connection.onclose(() => {
         showToast({
-            message: '서버와의 연결이 끊어졌습니다.',
-            type: 'error'
+        message: '서버와의 연결이 끊어졌습니다. DB 폴링 모드로 전환합니다.',
+        type: 'error'
         });
+    
+        updateConnectionStatus('disconnected');
     });
 
     try {
@@ -1089,12 +1381,39 @@ async function initializeSignalR(token) {
             message: '실시간 모니터링이 시작되었습니다.',
             type: 'success'
         });
+
+        updateConnectionStatus('connected');
+
     } catch (error) {
         console.error('SignalR 연결 실패:', error);
         showToast({
             message: '실시간 연결에 실패했습니다.',
             type: 'error'
         });
+        updateConnectionStatus('disconnected');
+    }
+}
+
+/**
+ * 연결 상태 업데이트
+ */
+function updateConnectionStatus(status) {
+   const statusElement = document.getElementById('connectionStatus');
+    if (statusElement) {
+        switch(status) {
+            case 'connected':
+                statusElement.innerHTML = '<i class="fas fa-check-circle"></i> 서버 연결됨';
+                statusElement.className = 'connection-status connected';
+                break;
+            case 'reconnecting':
+                statusElement.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> 재연결 중...';
+                statusElement.className = 'connection-status reconnecting';
+                break;
+            case 'disconnected':
+                statusElement.innerHTML = '<i class="fas fa-exclamation-circle"></i> 연결 끊김';
+                statusElement.className = 'connection-status disconnected';
+                break;
+        }
     }
 }
 
@@ -1112,15 +1431,47 @@ function onSensorDataReceived(data) {
 }
 
 function onSensorStatusChanged(data) {
-    const sensor = sensors.find(s => s.sensorID === data.sensorId);
+     const sensor = sensors.find(s => s.sensorID === data.sensorId);
     if (sensor) {
+        const previousStatus = sensor.connectionStatus;
         sensor.connectionStatus = data.status;
+        
+        // 상태 변경 시 UI 업데이트
         updateSensorCard(sensor);
-
+        
+        // 온라인으로 변경된 경우 즉시 데이터 가져오기
+        if (previousStatus !== 'online' && data.status === 'online') {
+            // 개별 센서 데이터 즉시 업데이트
+            updateSingleSensorData(sensor.sensorID);
+        }
+        
         addEventLog('connection',
-            `센서 ${sensor.name}이(가) ${data.status === 'online' ? '연결' : '연결 해제'}되었습니다.`,
-            sensor.name
+            `센서가 ${data.status === 'online' ? '연결' : '연결 해제'}되었습니다.`,
+            sensor.name || `센서 ${sensor.sensorID}`
         );
+    }
+}
+
+/**
+ * 단일 센서 데이터 업데이트
+ */
+async function updateSingleSensorData(sensorId) {
+    try {
+        const response = await apiCall(`/api/sensors/${sensorId}/data?limit=1`);
+        
+        if (response && response.ok) {
+            const data = await response.json();
+            if (data && data.length > 0) {
+                const sensor = sensors.find(s => s.sensorID === sensorId);
+                if (sensor) {
+                    sensor.latestData = data[0];
+                    sensor.lastCommunication = data[0].timestamp;
+                    updateSensorCard(sensor);
+                }
+            }
+        }
+    } catch (error) {
+        console.error(`센서 ${sensorId} 데이터 업데이트 실패:`, error);
     }
 }
 
@@ -1352,11 +1703,16 @@ function setViewMode(mode) {
 async function refreshSensors() {
     showLoading(true);
     try {
+        // 센서 목록 새로고침
         if (selectedGroupId) {
             await loadSensors(selectedGroupId);
         } else if (selectedCompanyId) {
             await loadSensors();
         }
+        
+        // 온라인 센서 데이터 즉시 업데이트
+        await pollSensorData();
+        
         showToast({
             message: '센서 목록이 새로고침되었습니다.',
             type: 'success'

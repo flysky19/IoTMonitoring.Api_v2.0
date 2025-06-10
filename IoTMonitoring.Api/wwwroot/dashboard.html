@@ -123,7 +123,31 @@
                         필터
                     </button>
                 </div>
+
+                <div class="toolbar-center">
+                    <!-- 연결 상태 표시 -->
+                    <div id="connectionStatus" class="connection-status">
+                        <i class="fas fa-check-circle"></i> 서버 연결됨
+                    </div>
+
+                    <!-- DB 폴링 상태 -->
+                    <div id="pollingStatus" class="polling-status">
+                        <i class="fas fa-database"></i> DB 폴링 대기 중
+                    </div>
+                </div>
+
                 <div class="toolbar-right">
+                    <!-- 폴링 주기 선택 -->
+                    <div class="polling-interval-control">
+                        <label>업데이트 주기:</label>
+                        <select id="pollingIntervalSelect" class="form-select form-select-sm">
+                            <option value="5" selected>5초</option>
+                            <option value="10">10초</option>
+                            <option value="30">30초</option>
+                            <option value="60">1분</option>
+                        </select>
+                    </div>
+
                     <div class="view-switcher">
                         <button id="gridViewBtn" class="btn btn-icon active" title="그리드 보기">
                             <i class="fas fa-th"></i>

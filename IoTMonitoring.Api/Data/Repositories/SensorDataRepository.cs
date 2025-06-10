@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Threading.Tasks;
 using Dapper;
 using IoTMonitoring.Api.Data.Connection;
@@ -28,13 +29,24 @@ namespace IoTMonitoring.Api.Data.Repositories
                     _ => GetParticleDataRawSql()
                 };
 
-                return await connection.QueryAsync(sql, new
+                //var parameters = new DynamicParameters();
+                //parameters.Add("@SensorId", sensorId, DbType.Int32);
+                //var st = request.StartDate.ToString("yyyy-MM-dd HH:mm:ss");
+                //var et = request.EndDate.ToString("yyyy-MM-dd HH:mm:ss");
+                //parameters.Add("@StartDate", st);
+                //parameters.Add("@EndDate", et);
+                //parameters.Add("@Limit", request.Limit);
+
+                //var result = await connection.QueryAsync(sql, parameters);
+
+                var result = await connection.QueryAsync(sql, new
                 {
                     SensorId = sensorId,
-                    StartDate = request.StartDate,
-                    EndDate = request.EndDate,
+                    StartDate = request.StartDate.ToString("yyyy-MM-dd HH:mm:ss"),
+                    EndDate = request.EndDate.ToString("yyyy-MM-dd HH:mm:ss"),
                     Limit = request.Limit
                 });
+                return result;
             }
         }
 
@@ -160,7 +172,7 @@ namespace IoTMonitoring.Api.Data.Repositories
                 FROM ParticleData
                 WHERE SensorID = @SensorId 
                   AND Timestamp >= @StartDate 
-                  AND Timestamp <= @EndDate
+                  AND Timestamp <= @EndDate 
                 ORDER BY Timestamp DESC";
         }
 
