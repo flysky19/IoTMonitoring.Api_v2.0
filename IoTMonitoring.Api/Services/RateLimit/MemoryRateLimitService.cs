@@ -1,4 +1,5 @@
 ﻿using IoTMonitoring.Api.Data.RateLimit;
+using IoTMonitoring.Api.Utilities;
 using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 
@@ -69,7 +70,7 @@ namespace IoTMonitoring.Api.Services.RateLimit
         public async Task RecordRequestAsync(string clientId)
         {
             var clientInfo = _clients.GetOrAdd(clientId, new ClientRequestInfo { ClientId = clientId });
-            clientInfo.RequestTimes.Add(DateTime.UtcNow);
+            clientInfo.RequestTimes.Add(DateTimeHelper.Now);
 
             // 메모리 사용량 제한을 위해 오래된 요청 기록 정리
             clientInfo.CleanupOldRequests(TimeSpan.FromDays(1));
@@ -82,7 +83,7 @@ namespace IoTMonitoring.Api.Services.RateLimit
 
         private async Task BlockClientAsync(ClientRequestInfo clientInfo, string reason)
         {
-            clientInfo.BlockedUntil = DateTime.UtcNow.Add(_options.BlockDuration);
+            clientInfo.BlockedUntil = DateTimeHelper.Now.Add(_options.BlockDuration);
             clientInfo.ViolationCount++;
 
             _logger.LogWarning($"클라이언트 차단: {clientInfo.ClientId}, 사유: {reason}, " +
@@ -91,7 +92,7 @@ namespace IoTMonitoring.Api.Services.RateLimit
 
         private void CleanupOldData(object state)
         {
-            var cutoff = DateTime.UtcNow - TimeSpan.FromDays(1);
+            var cutoff = DateTimeHelper.Now - TimeSpan.FromDays(1);
             var toRemove = new List<string>();
 
             foreach (var kvp in _clients)

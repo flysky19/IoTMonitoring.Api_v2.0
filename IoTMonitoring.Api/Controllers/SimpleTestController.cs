@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using IoTMonitoring.Api.Utilities;
+using Microsoft.AspNetCore.Mvc;
 
 namespace IoTMonitoring.Api.Controllers
 {
@@ -9,7 +10,7 @@ namespace IoTMonitoring.Api.Controllers
         [HttpGet]
         public ActionResult<object> Get()
         {
-            return Ok(new { message = "API가 정상 작동합니다!", timestamp = DateTime.UtcNow });
+            return Ok(new { message = "API가 정상 작동합니다!", timestamp = DateTimeHelper.Now });
         }
     }
 }

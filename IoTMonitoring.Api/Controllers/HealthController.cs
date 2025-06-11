@@ -1,5 +1,6 @@
 ﻿using IoTMonitoring.Api.Data.Connection;
 using IoTMonitoring.Api.Services.MQTT.Interfaces;
+using IoTMonitoring.Api.Utilities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IoTMonitoring.Api.Controllers
@@ -24,7 +25,7 @@ namespace IoTMonitoring.Api.Controllers
             var health = new
             {
                 status = "healthy",
-                timestamp = DateTime.UtcNow,
+                timestamp = DateTimeHelper.Now,
                 services = new
                 {
                     database = await CheckDatabaseHealth(),

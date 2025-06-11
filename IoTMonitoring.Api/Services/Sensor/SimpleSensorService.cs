@@ -5,6 +5,7 @@ using IoTMonitoring.Api.DTOs;
 using IoTMonitoring.Api.Services.Sensor.Interfaces;
 using IoTMonitoring.Api.Services.Logging.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using IoTMonitoring.Api.Utilities;
 
 namespace IoTMonitoring.Api.Services.Sensor
 {
@@ -67,7 +68,7 @@ namespace IoTMonitoring.Api.Services.Sensor
                     SensorType = "particle",
                     Status = "active",
                     ConnectionStatus = "online",
-                    LastCommunication = DateTime.UtcNow,
+                    LastCommunication = DateTimeHelper.Now,
                     GroupID = 1,
                     GroupName = "테스트 그룹",
                     Location = "테스트 위치"
@@ -80,7 +81,7 @@ namespace IoTMonitoring.Api.Services.Sensor
                     SensorType = "wind",
                     Status = "active",
                     ConnectionStatus = "offline",
-                    LastCommunication = DateTime.UtcNow.AddMinutes(-10),
+                    LastCommunication = DateTimeHelper.Now.AddMinutes(-10),
                     GroupID = 1,
                     GroupName = "테스트 그룹",
                     Location = "테스트 위치"

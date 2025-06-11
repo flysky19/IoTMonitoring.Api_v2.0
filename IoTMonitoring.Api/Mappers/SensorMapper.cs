@@ -2,6 +2,7 @@
 using IoTMonitoring.Api.Data.Models;
 using IoTMonitoring.Api.DTOs;
 using IoTMonitoring.Api.Mappers.Interfaces;
+using IoTMonitoring.Api.Utilities;
 
 namespace IoTMonitoring.Api.Mappers
 {
@@ -80,12 +81,12 @@ namespace IoTMonitoring.Api.Mappers
             if (request.ConnectionTimeout > 0) sensor.ConnectionTimeout = request.ConnectionTimeout;
             if (request.InstallationDate.HasValue) sensor.InstallationDate = request.InstallationDate;
 
-            sensor.UpdatedAt = DateTime.UtcNow;
+            sensor.UpdatedAt = DateTimeHelper.Now;
         }
 
         public SensorStatusDto ToStatusDto(Sensor sensor)
         {
-            var now = DateTime.UtcNow;
+            var now = DateTimeHelper.Now;
             var isOnline = sensor.ConnectionStatus == "online" &&
                           sensor.LastHeartbeat.HasValue &&
                           (now - sensor.LastHeartbeat.Value).TotalSeconds <= sensor.ConnectionTimeout;
@@ -119,7 +120,7 @@ namespace IoTMonitoring.Api.Mappers
             // 간단한 가동률 계산 (실제로는 SensorUptimeStats 테이블을 참조해야 함)
             if (!sensor.LastHeartbeat.HasValue) return 0;
 
-            var daysSinceLastHeartbeat = (DateTime.UtcNow - sensor.LastHeartbeat.Value).TotalDays;
+            var daysSinceLastHeartbeat = (DateTimeHelper.Now - sensor.LastHeartbeat.Value).TotalDays;
             if (daysSinceLastHeartbeat > 1) return 0;
 
             return sensor.ConnectionStatus == "online" ? 100 : 50;

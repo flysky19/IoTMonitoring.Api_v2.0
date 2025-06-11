@@ -3,6 +3,7 @@ using System.Linq;
 using IoTMonitoring.Api.Data.Models;
 using IoTMonitoring.Api.DTOs;
 using IoTMonitoring.Api.Mappers.Interfaces;
+using IoTMonitoring.Api.Utilities;
 using Microsoft.AspNetCore.Identity;
 
 namespace IoTMonitoring.Api.Mappers
@@ -66,8 +67,8 @@ namespace IoTMonitoring.Api.Mappers
                 Phone = userDto.Phone,
                 Role = userDto.Role,  // 단일 역할
                 IsActive = true,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                CreatedAt = DateTimeHelper.Now,
+                UpdatedAt = DateTimeHelper.Now
             };
         }
 
@@ -81,7 +82,7 @@ namespace IoTMonitoring.Api.Mappers
             user.IsActive = dto.IsActive;
             user.Role = dto.Role == null ? user.Role : "User";
             //user.com = dto.CompanyIDs?.FirstOrDefault();
-            user.UpdatedAt = DateTime.UtcNow;
+            user.UpdatedAt = DateTimeHelper.Now;
         }
 
         public void UpdateEntity(User user, UserProfileUpdateDto dto)
@@ -91,7 +92,7 @@ namespace IoTMonitoring.Api.Mappers
             user.Email = dto.Email ?? user.Email;
             user.FullName = dto.FullName ?? user.FullName;
             user.Phone = dto.Phone ?? user.Phone;
-            user.UpdatedAt = DateTime.UtcNow;
+            user.UpdatedAt = DateTimeHelper.Now;
         }
     }
 }

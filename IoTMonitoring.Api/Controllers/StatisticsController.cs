@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using IoTMonitoring.Api.DTOs;
 using IoTMonitoring.Api.Services.Interfaces;
+using IoTMonitoring.Api.Utilities;
 
 namespace IoTMonitoring.Api.Controllers
 {
@@ -46,8 +47,8 @@ namespace IoTMonitoring.Api.Controllers
             if (!sensorId.HasValue && !groupId.HasValue)
                 return BadRequest("Either sensorId or groupId must be provided");
 
-            var start = startDate ?? DateTime.UtcNow.AddDays(-30);
-            var end = endDate ?? DateTime.UtcNow;
+            var start = startDate ?? DateTimeHelper.Now.AddDays(-30);
+            var end = endDate ?? DateTimeHelper.Now;
 
             var statistics = await _statisticsService.GetUptimeStatisticsAsync(sensorId, groupId, start, end);
             return Ok(statistics);
@@ -82,7 +83,7 @@ namespace IoTMonitoring.Api.Controllers
             [FromQuery] int? companyId = null,
             [FromQuery] DateTime? date = null)
         {
-            var targetDate = date ?? DateTime.UtcNow.Date;
+            var targetDate = date ?? DateTimeHelper.Now.Date;
             var summary = await _statisticsService.GetSensorTypeSummaryAsync(companyId, targetDate);
             return Ok(summary);
         }

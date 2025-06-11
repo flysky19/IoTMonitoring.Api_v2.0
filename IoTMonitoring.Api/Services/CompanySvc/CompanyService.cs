@@ -7,6 +7,7 @@ using IoTMonitoring.Api.Data.Repositories.Interfaces;
 using IoTMonitoring.Api.Services.CompanySvc.Interfaces;
 using IoTMonitoring.Api.DTOs;
 using Microsoft.EntityFrameworkCore;
+using IoTMonitoring.Api.Utilities;
 
 namespace IoTMonitoring.Api.Services.CompanySvc
 {
@@ -92,8 +93,8 @@ namespace IoTMonitoring.Api.Services.CompanySvc
                 ContactPhone = companyDto.ContactPhone?.Trim(),
                 ContactEmail = companyDto.ContactEmail?.Trim(),
                 Active = companyDto.Active ? true : false,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                CreatedAt = DateTimeHelper.Now,
+                UpdatedAt = DateTimeHelper.Now
             };
 
             var companyId = await _companyRepository.CreateAsync(company);
@@ -129,7 +130,7 @@ namespace IoTMonitoring.Api.Services.CompanySvc
             company.ContactPhone = companyDto.ContactPhone?.Trim();
             company.ContactEmail = companyDto.ContactEmail?.Trim();
             company.Active = companyDto.Active ? true: false;
-            company.UpdatedAt = DateTime.UtcNow;
+            company.UpdatedAt = DateTimeHelper.Now;
 
             await _companyRepository.UpdateAsync(company);
         }

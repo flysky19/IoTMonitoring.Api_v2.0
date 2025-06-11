@@ -1,6 +1,7 @@
 ﻿using IoTMonitoring.Api.Data.Models;
 using IoTMonitoring.Api.DTOs;
 using IoTMonitoring.Api.Mappers.Interfaces;
+using IoTMonitoring.Api.Utilities;
 
 namespace IoTMonitoring.Api.Mappers
 {
@@ -54,7 +55,7 @@ namespace IoTMonitoring.Api.Mappers
                 Location = createDto.Location,
                 Description = createDto.Description,
                 Active = createDto.Active,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTimeHelper.Now
             };
         }
 
@@ -68,7 +69,7 @@ namespace IoTMonitoring.Api.Mappers
             entity.Location = updateDto.Location;
             entity.Description = updateDto.Description;
             entity.Active = updateDto.Active;
-            entity.UpdatedAt = DateTime.UtcNow;
+            entity.UpdatedAt = DateTimeHelper.Now;
         }
     }
 }

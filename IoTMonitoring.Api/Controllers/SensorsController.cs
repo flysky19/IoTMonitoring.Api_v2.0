@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using IoTMonitoring.Api.Services.Logging.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Security.Claims;
+using IoTMonitoring.Api.Utilities;
 
 namespace IoTMonitoring.Api.Controllers
 {
@@ -100,8 +101,8 @@ namespace IoTMonitoring.Api.Controllers
 
                 var request = new SensorDataRequestDto
                 {
-                    StartDate = startDate ?? DateTime.Now.AddDays(-1), // 기본: 1일 전부터
-                    EndDate = endDate ?? DateTime.Now, // 기본: 현재까지
+                    StartDate = startDate ?? DateTimeHelper.Now.AddDays(-1), // 기본: 1일 전부터
+                    EndDate = endDate ?? DateTimeHelper.Now, // 기본: 현재까지
                     Limit = limit,
                     AggregationType = aggregationType
                 };

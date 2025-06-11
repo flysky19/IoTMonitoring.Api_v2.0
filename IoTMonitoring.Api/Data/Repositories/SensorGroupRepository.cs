@@ -7,6 +7,7 @@ using Dapper;
 using IoTMonitoring.Api.Data.Connection;
 using IoTMonitoring.Api.Data.Models;
 using IoTMonitoring.Api.Data.Repositories.Interfaces;
+using IoTMonitoring.Api.Utilities;
 using Microsoft.Extensions.Logging;
 
 namespace IoTMonitoring.Api.Data.Repositories
@@ -185,7 +186,7 @@ namespace IoTMonitoring.Api.Data.Repositories
                 {
                     // 현재 시간 설정
                     if (sensorGroup.CreatedAt == default)
-                        sensorGroup.CreatedAt = DateTime.UtcNow;
+                        sensorGroup.CreatedAt = DateTimeHelper.Now;
 
                     // Active 기본값 설정
                     if (!sensorGroup.Active)
@@ -229,7 +230,7 @@ namespace IoTMonitoring.Api.Data.Repositories
                 using (var connection = await _connectionFactory.CreateConnectionAsync())
                 {
                     // 업데이트 시간 설정
-                    sensorGroup.UpdatedAt = DateTime.UtcNow;
+                    sensorGroup.UpdatedAt = DateTimeHelper.Now;
 
                     int rowsAffected = await connection.ExecuteScalarAsync<int>(sql, new
                     {
@@ -269,7 +270,7 @@ namespace IoTMonitoring.Api.Data.Repositories
                     await connection.ExecuteAsync(sql, new
                     {
                         GroupID = groupId,
-                        UpdatedAt = DateTime.UtcNow
+                        UpdatedAt = DateTimeHelper.Now
                     });
                 }
             }

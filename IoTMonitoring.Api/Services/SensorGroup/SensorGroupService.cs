@@ -3,6 +3,7 @@ using IoTMonitoring.Api.Services.SensorGroup.Interfaces;
 using IoTMonitoring.Api.Data.Repositories.Interfaces;
 using IoTMonitoring.Api.Mappers.Interfaces;
 using Microsoft.Extensions.Logging;
+using IoTMonitoring.Api.Utilities;
 
 namespace IoTMonitoring.Api.Services.SensorGroup
 {
@@ -100,7 +101,7 @@ namespace IoTMonitoring.Api.Services.SensorGroup
                 }
 
                 var group = _sensorGroupMapper.ToEntity(createDto);
-                group.CreatedAt = DateTime.UtcNow;
+                group.CreatedAt = DateTimeHelper.Now;
 
                 var createdGroup = await _sensorGroupRepository.CreateAsync(group);
                 var result = await GetSensorGroupDetailAsync(createdGroup.GroupID);
@@ -139,7 +140,7 @@ namespace IoTMonitoring.Api.Services.SensorGroup
 
                 // 엔티티 업데이트
                 _sensorGroupMapper.UpdateEntity(existingGroup, updateDto);
-                existingGroup.UpdatedAt = DateTime.UtcNow;
+                existingGroup.UpdatedAt = DateTimeHelper.Now;
 
                 await _sensorGroupRepository.UpdateAsync(existingGroup);
                 var result = await GetSensorGroupDetailAsync(groupId);

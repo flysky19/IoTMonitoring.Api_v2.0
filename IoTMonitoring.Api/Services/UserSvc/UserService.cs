@@ -11,6 +11,7 @@ using IoTMonitoring.Api.Services.Logging.Interfaces;
 using IoTMonitoring.Api.Mappers.Interfaces;
 using IoTMonitoring.Api.Services.Security.Interfaces;
 using IoTMonitoring.Api.Services.UserSvr.Interfaces;
+using IoTMonitoring.Api.Utilities;
 
 namespace IoTMonitoring.Api.Services.UserSvr
 {
@@ -207,7 +208,7 @@ namespace IoTMonitoring.Api.Services.UserSvr
                 }
 
                 user.IsActive = false;
-                user.UpdatedAt = DateTime.UtcNow;
+                user.UpdatedAt = DateTimeHelper.Now;
                 await _userRepository.UpdateAsync(user);
 
                 _logger.LogInformation($"사용자 비활성화 완료 - ID: {id}");
@@ -237,7 +238,7 @@ namespace IoTMonitoring.Api.Services.UserSvr
                 }
 
                 user.IsActive = true;
-                user.UpdatedAt = DateTime.UtcNow;
+                user.UpdatedAt = DateTimeHelper.Now;
                 await _userRepository.UpdateAsync(user);
 
                 _logger.LogInformation($"사용자 활성화 완료 - ID: {id}");
@@ -373,7 +374,7 @@ namespace IoTMonitoring.Api.Services.UserSvr
                 }
 
                 //user.Role = roles?.FirstOrDefault() ?? "User";
-                user.UpdatedAt = DateTime.UtcNow;
+                user.UpdatedAt = DateTimeHelper.Now;
                 await _userRepository.UpdateAsync(user);
 
                 _logger.LogInformation($"사용자 역할 변경 완료 - UserID: {userId}");
@@ -398,7 +399,7 @@ namespace IoTMonitoring.Api.Services.UserSvr
                 }
 
                 //user.CompanyID = companyIds?.FirstOrDefault();
-                user.UpdatedAt = DateTime.UtcNow;
+                user.UpdatedAt = DateTimeHelper.Now;
                 await _userRepository.UpdateAsync(user);
 
                 _logger.LogInformation($"사용자 회사 할당 변경 완료 - UserID: {userId}, CompanyID: {user.company}");

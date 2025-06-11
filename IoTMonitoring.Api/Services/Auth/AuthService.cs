@@ -7,6 +7,7 @@ using IoTMonitoring.Api.DTOs.Auth;
 using IoTMonitoring.Api.Services.Auth.Interfaces;
 using IoTMonitoring.Api.Services.Security.Interfaces;
 using IoTMonitoring.Api.Services.Security.Models;
+using IoTMonitoring.Api.Utilities;
 
 namespace IoTMonitoring.Api.Services.Auth
 {
@@ -45,7 +46,7 @@ namespace IoTMonitoring.Api.Services.Auth
             }
 
             // 3. 마지막 로그인 시간 업데이트
-            user.LastLogin = DateTime.UtcNow;
+            user.LastLogin = DateTimeHelper.Now;
             await _userRepository.UpdateAsync(user);
 
             // 4. JWT 토큰 생성
@@ -91,7 +92,7 @@ namespace IoTMonitoring.Api.Services.Auth
                 UserId = user.UserID,
                 Username = user.Username,
                 FullName = user.FullName,
-                LastLogin = user.LastLogin ?? DateTime.UtcNow
+                LastLogin = user.LastLogin ?? DateTimeHelper.Now
             };
         }
 

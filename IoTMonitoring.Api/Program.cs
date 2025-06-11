@@ -140,6 +140,7 @@ catch (Exception ex)
 // SignalR 서비스 등록
 builder.Services.AddSignalR();
 builder.Services.AddScoped<ISignalRService, SignalRService>();
+builder.Services.AddMaintenanceServices(); // 유지보수 서비스 등록
 
 var app = builder.Build();
 

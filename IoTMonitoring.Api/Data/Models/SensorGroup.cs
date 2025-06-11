@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using IoTMonitoring.Api.Utilities;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IoTMonitoring.Api.Data.Models
@@ -21,7 +22,7 @@ namespace IoTMonitoring.Api.Data.Models
         public string Description { get; set; }
 
         [Required]
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; set; } = DateTimeHelper.Now;
 
         public DateTime? UpdatedAt { get; set; }
 

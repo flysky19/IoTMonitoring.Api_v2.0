@@ -8,6 +8,7 @@ using IoTMonitoring.Api.Data.Connection;
 using IoTMonitoring.Api.Data.Models;
 using IoTMonitoring.Api.Data.Repositories.Interfaces;
 using IoTMonitoring.Api.DTOs;
+using IoTMonitoring.Api.Utilities;
 using Microsoft.EntityFrameworkCore;
 
 namespace IoTMonitoring.Api.Data.Repositories
@@ -277,8 +278,8 @@ namespace IoTMonitoring.Api.Data.Repositories
                 {
                     SensorId = sensorId,
                     ConnectionStatus = connectionStatus,
-                    LastCommunication = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
+                    LastCommunication = DateTimeHelper.Now,
+                    UpdatedAt = DateTimeHelper.Now
                 });
 
                 return rowsAffected > 0;
@@ -297,7 +298,7 @@ namespace IoTMonitoring.Api.Data.Repositories
                         UpdatedAt = @UpdatedAt
                     WHERE SensorID = @SensorId";
 
-                var now = DateTime.UtcNow;
+                var now = DateTimeHelper.Now;
                 var rowsAffected = await connection.ExecuteAsync(sql, new
                 {
                     SensorId = sensorId,

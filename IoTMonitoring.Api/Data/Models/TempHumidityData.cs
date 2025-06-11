@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using IoTMonitoring.Api.Utilities;
 
 namespace IoTMonitoring.Api.Data.Models
 {
@@ -13,7 +14,7 @@ namespace IoTMonitoring.Api.Data.Models
         public int SensorID { get; set; }
 
         [Required]
-        public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+        public DateTime Timestamp { get; set; } = DateTimeHelper.Now;
 
         public float? Temperature { get; set; }
 

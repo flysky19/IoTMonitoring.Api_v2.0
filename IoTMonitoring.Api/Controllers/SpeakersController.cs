@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using IoTMonitoring.Api.DTOs;
 using IoTMonitoring.Api.Services.Interfaces;
 using System.Threading.Tasks;
+using IoTMonitoring.Api.Utilities;
 
 namespace IoTMonitoring.Api.Controllers
 {
@@ -55,8 +56,8 @@ namespace IoTMonitoring.Api.Controllers
             [FromQuery] DateTime? endDate = null,
             [FromQuery] int limit = 50)
         {
-            var start = startDate ?? DateTime.UtcNow.AddDays(-7);
-            var end = endDate ?? DateTime.UtcNow;
+            var start = startDate ?? DateTimeHelper.Now.AddDays(-7);
+            var end = endDate ?? DateTimeHelper.Now;
 
             var history = await _speakerService.GetControlHistoryAsync(id, start, end, limit);
             return Ok(history);

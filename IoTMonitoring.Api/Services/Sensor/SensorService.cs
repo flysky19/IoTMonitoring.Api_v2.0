@@ -9,6 +9,7 @@ using IoTMonitoring.Api.Services.Sensor.Interfaces;
 using IoTMonitoring.Api.Services.Logging.Interfaces;
 using IoTMonitoring.Api.Mappers.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using IoTMonitoring.Api.Utilities;
 
 namespace IoTMonitoring.Api.Services.Sensor
 {
@@ -159,7 +160,7 @@ namespace IoTMonitoring.Api.Services.Sensor
                         HeartbeatTopic = sensorDto.MqttTopics.HeartbeatTopic,
                         QoS = sensorDto.MqttTopics.QoS,
                         Retained = sensorDto.MqttTopics.Retained,
-                        CreatedAt = DateTime.UtcNow
+                        CreatedAt = DateTimeHelper.Now
                     };
 
                     await _mqttTopicRepository.CreateAsync(mqttTopic);
@@ -192,7 +193,7 @@ namespace IoTMonitoring.Api.Services.Sensor
                 }
 
                 existingSensor.GroupID = groupid;
-                existingSensor.UpdatedAt = DateTime.UtcNow;
+                existingSensor.UpdatedAt = DateTimeHelper.Now;
 
                 // 업데이트할 필드만 수정
                 await _sensorRepository.UpdateAsync(existingSensor);
@@ -597,7 +598,7 @@ namespace IoTMonitoring.Api.Services.Sensor
                 if (!string.IsNullOrEmpty(topicDto.HeartbeatTopic)) mqttTopic.HeartbeatTopic = topicDto.HeartbeatTopic;
                 mqttTopic.QoS = topicDto.QoS;
                 mqttTopic.Retained = topicDto.Retained;
-                mqttTopic.UpdatedAt = DateTime.UtcNow;
+                mqttTopic.UpdatedAt = DateTimeHelper.Now;
 
                 await _mqttTopicRepository.UpdateAsync(mqttTopic);
 
@@ -625,7 +626,7 @@ namespace IoTMonitoring.Api.Services.Sensor
 
                 // 물리적 삭제 대신 상태를 'inactive'로 변경
                 sensor.Status = "inactive";
-                sensor.UpdatedAt = DateTime.UtcNow;
+                sensor.UpdatedAt = DateTimeHelper.Now;
                 await _sensorRepository.UpdateAsync(sensor);
 
                 _logger.LogInformation($"센서 비활성화 완료 - ID: {id}");
@@ -656,7 +657,7 @@ namespace IoTMonitoring.Api.Services.Sensor
 
                 // 물리적 삭제 대신 상태를 'inactive'로 변경
                 sensor.Status = "active";
-                sensor.UpdatedAt = DateTime.UtcNow;
+                sensor.UpdatedAt = DateTimeHelper.Now;
                 await _sensorRepository.UpdateAsync(sensor);
 
                 _logger.LogInformation($"센서 활성화 완료 - ID: {id}");

@@ -1,4 +1,6 @@
-﻿namespace IoTMonitoring.Api.Middlewares
+﻿using IoTMonitoring.Api.Utilities;
+
+namespace IoTMonitoring.Api.Middlewares
 {
     public class RequestLoggingMiddleware
     {
@@ -13,14 +15,14 @@
 
         public async Task InvokeAsync(HttpContext context)
         {
-            var startTime = DateTime.UtcNow;
+            var startTime = DateTimeHelper.Now;
 
             // 요청 정보 로깅
             _logger.LogInformation($"🚀 {context.Request.Method} {context.Request.Path} 시작");
 
             await _next(context);
 
-            var duration = DateTime.UtcNow - startTime;
+            var duration = DateTimeHelper.Now - startTime;
 
             // 응답 정보 로깅  
             _logger.LogInformation($"✅ {context.Request.Method} {context.Request.Path} " +

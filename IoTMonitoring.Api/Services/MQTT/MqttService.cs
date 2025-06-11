@@ -16,6 +16,7 @@ using IoTMonitoring.Api.Data.Repositories.Interfaces;
 using System.Text.Json;
 using IoTMonitoring.Api.DTOs;
 using IoTMonitoring.Api.Services.SignalR.Interfaces;
+using IoTMonitoring.Api.Utilities;
 
 namespace IoTMonitoring.Api.Services.MQTT
 {
@@ -53,7 +54,7 @@ namespace IoTMonitoring.Api.Services.MQTT
                 }
                 if (clientId.Contains("{Timestamp}"))
                 {
-                    clientId = clientId.Replace("{Timestamp}", DateTime.UtcNow.Ticks.ToString());
+                    clientId = clientId.Replace("{Timestamp}", DateTimeHelper.Now.Ticks.ToString());
                 }
 
                 _logger.LogInformation($"MQTT Client ID: {clientId}");
@@ -181,7 +182,7 @@ namespace IoTMonitoring.Api.Services.MQTT
                         SensorUuid = sensorUuid,
                         MessageType = messageType,
                         Payload = payload,
-                        Timestamp = DateTime.UtcNow
+                        Timestamp = DateTimeHelper.Now
                     });
                 }
             }
@@ -237,7 +238,7 @@ namespace IoTMonitoring.Api.Services.MQTT
                         sensorUuid = sensorUuid,
                         sensorType = sensor.SensorType,
                         data = JsonSerializer.Deserialize<JsonElement>(payload),
-                        timestamp = DateTime.UtcNow
+                        timestamp = DateTimeHelper.Now
                     };
 
                     // 모든 모니터링 클라이언트에게 전송
@@ -273,7 +274,7 @@ namespace IoTMonitoring.Api.Services.MQTT
                             SensorID = sensor.SensorID,
                             Timestamp = data.TryGetProperty("timestamp", out var timestampProp)
                                 ? DateTime.Parse(timestampProp.GetString())
-                                : DateTime.UtcNow,
+                                : DateTimeHelper.Now,
                             Temperature = data.TryGetProperty("temperature", out var tempProp)
                                 ? tempProp.GetSingle()
                                 : null,
@@ -293,7 +294,7 @@ namespace IoTMonitoring.Api.Services.MQTT
                                 SensorID = sensor.SensorID,
                                 Timestamp = data.TryGetProperty("timestamp", out var timestampProp2)
                                 ? DateTime.Parse(timestampProp2.GetString())
-                                : DateTime.UtcNow,
+                                : DateTimeHelper.Now,
                                 PM0_3 = sensorData.TryGetProperty("pm0_3", out var pm03Prop) ? pm03Prop.GetSingle() : null,
                                 PM0_5 = sensorData.TryGetProperty("pm0_5", out var pm05Prop) ? pm05Prop.GetSingle() : null,
                                 PM1_0 = sensorData.TryGetProperty("pm1_0", out var pm10Prop) ? pm10Prop.GetSingle() : null,
@@ -314,7 +315,7 @@ namespace IoTMonitoring.Api.Services.MQTT
                             SensorID = sensor.SensorID,
                             Timestamp = data.TryGetProperty("timestamp", out var timestampProp3)
                                 ? DateTime.Parse(timestampProp3.GetString())
-                                : DateTime.UtcNow,
+                                : DateTimeHelper.Now,
                             WindSpeed = data.TryGetProperty("windSpeed", out var windSpeedProp)
                                 ? windSpeedProp.GetSingle()
                                 : null,
@@ -352,7 +353,7 @@ namespace IoTMonitoring.Api.Services.MQTT
                     await sensorService.UpdateSensorHeartbeatAsync(sensor.SensorID);
 
                     // SignalR로 하트비트 업데이트 전송
-                    await signalRService.SendHeartbeatUpdateAsync(sensor.SensorID, DateTime.UtcNow);
+                    await signalRService.SendHeartbeatUpdateAsync(sensor.SensorID, DateTimeHelper.Now);
 
                     _logger.LogInformation($"하트비트 업데이트: {sensorUuid}");
                 }

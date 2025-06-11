@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using IoTMonitoring.Api.Services.Logging.Interfaces;
+using IoTMonitoring.Api.Utilities;
 
 namespace IoTMonitoring.Api.Services.Logging
 {
@@ -13,7 +14,7 @@ namespace IoTMonitoring.Api.Services.Logging
         public AppLogger()
         {
             _logDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
-            _logFileName = $"app-{DateTime.Now:yyyy-MM-dd}.log";
+            _logFileName = $"app-{DateTimeHelper.Now:yyyy-MM-dd}.log";
 
             // 로그 디렉토리 생성
             if (!Directory.Exists(_logDirectory))
@@ -64,7 +65,7 @@ namespace IoTMonitoring.Api.Services.Logging
                 try
                 {
                     var logFilePath = Path.Combine(_logDirectory, _logFileName);
-                    var logEntry = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{level}] {message}";
+                    var logEntry = $"[{DateTimeHelper.Now:yyyy-MM-dd HH:mm:ss}] [{level}] {message}";
 
                     File.AppendAllText(logFilePath, logEntry + Environment.NewLine);
 

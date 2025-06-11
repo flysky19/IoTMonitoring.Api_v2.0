@@ -7,6 +7,7 @@ using System.Text;
 using IoTMonitoring.Api.Data.Models;
 using IoTMonitoring.Api.Services.Security.Interfaces;
 using IoTMonitoring.Api.Services.Security.Models;
+using IoTMonitoring.Api.Utilities;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
@@ -36,7 +37,7 @@ namespace IoTMonitoring.Api.Services.Security
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            var expiry = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpirationMinutes);
+            var expiry = DateTimeHelper.Now.AddMinutes(_jwtSettings.ExpirationMinutes);
 
             var token = new JwtSecurityToken(
                 issuer: _jwtSettings.Issuer,
@@ -47,7 +48,7 @@ namespace IoTMonitoring.Api.Services.Security
             );
 
             // 리프레시 토큰 생성
-            var refreshTokenExpiry = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationDays);
+            var refreshTokenExpiry = DateTimeHelper.Now.AddDays(_jwtSettings.RefreshTokenExpirationDays);
             var refreshTokenData = new RefreshTokenData
             {
                 UserId = user.UserID,
@@ -99,7 +100,7 @@ namespace IoTMonitoring.Api.Services.Security
             {
                 var decrypted = DecryptRefreshToken(refreshToken);
                 refreshTokenData = JsonConvert.DeserializeObject<RefreshTokenData>(decrypted);
-                return refreshTokenData != null && refreshTokenData.ExpiryDate > DateTime.UtcNow;
+                return refreshTokenData != null && refreshTokenData.ExpiryDate > DateTimeHelper.Now;
             }
             catch
             {

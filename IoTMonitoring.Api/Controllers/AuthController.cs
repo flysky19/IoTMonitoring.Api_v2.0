@@ -4,6 +4,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using IoTMonitoring.Api.DTOs.Auth;
 using IoTMonitoring.Api.Services.Auth.Interfaces;
+using IoTMonitoring.Api.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -94,7 +95,7 @@ namespace IoTMonitoring.Api.Controllers
                 isValid = true,
                 userId = userId,
                 username = username,
-                timestamp = DateTime.UtcNow
+                timestamp = DateTimeHelper.Now
             });
         }
     }

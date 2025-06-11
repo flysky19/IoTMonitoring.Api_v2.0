@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using IoTMonitoring.Api.Hubs;
 using IoTMonitoring.Api.Services.SignalR.Interfaces;
+using IoTMonitoring.Api.Utilities;
 
 namespace IoTMonitoring.Api.Services.SignalR
 {
@@ -37,7 +38,7 @@ namespace IoTMonitoring.Api.Services.SignalR
                 {
                     sensorId = sensorId,
                     data = sensorData,
-                    timestamp = DateTime.UtcNow
+                    timestamp = DateTimeHelper.Now
                 });
 
                 _logger.LogDebug($"센서 {sensorId} 구독자들에게 데이터 전송 완료");
@@ -56,7 +57,7 @@ namespace IoTMonitoring.Api.Services.SignalR
                 {
                     sensorId = sensorId,
                     status = status,
-                    timestamp = DateTime.UtcNow
+                    timestamp = DateTimeHelper.Now
                 });
 
                 _logger.LogInformation($"센서 {sensorId} 상태 변경 알림: {status}");
@@ -75,7 +76,7 @@ namespace IoTMonitoring.Api.Services.SignalR
                 {
                     sensorId = sensorId,
                     lastHeartbeat = lastHeartbeat,
-                    timestamp = DateTime.UtcNow
+                    timestamp = DateTimeHelper.Now
                 });
             }
             catch (Exception ex)
