@@ -1,0 +1,211 @@
+﻿<!-- Sensor Detail Modal -->
+<div id="sensorDetailModal" class="sensor-detail-modal" style="display: none;">
+    <div class="sensor-detail-dialog">
+        <div class="sensor-detail-header">
+            <h2 class="sensor-detail-title">
+                <span id="sensorDetailIcon">📡</span>
+                <span id="sensorDetailName">센서 상세 정보</span>
+            </h2>
+            <button class="modal-close" onclick="closeSensorDetailModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="sensor-detail-body">
+            <!-- 좌측: 센서 정보 패널 -->
+            <div class="sensor-info-panel">
+                <div class="info-section">
+                    <h3 class="info-section-title">
+                        <i class="fas fa-info-circle"></i>
+                        기본 정보
+                    </h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">센서 ID</span>
+                            <span class="info-value" id="detailSensorId">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">센서 타입</span>
+                            <span class="info-value" id="detailSensorType">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">UUID</span>
+                            <span class="info-value" id="detailSensorUUID">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">모델</span>
+                            <span class="info-value" id="detailSensorModel">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">펌웨어 버전</span>
+                            <span class="info-value" id="detailFirmwareVersion">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">설치일</span>
+                            <span class="info-value" id="detailInstallDate">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h3 class="info-section-title">
+                        <i class="fas fa-network-wired"></i>
+                        연결 정보
+                    </h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">연결 상태</span>
+                            <span class="info-value" id="detailConnectionStatus">
+                                <span class="status-indicator"></span>
+                                <span class="status-text">-</span>
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">마지막 통신</span>
+                            <span class="info-value" id="detailLastComm">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">하트비트 주기</span>
+                            <span class="info-value" id="detailHeartbeatInterval">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">타임아웃 설정</span>
+                            <span class="info-value" id="detailTimeout">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h3 class="info-section-title">
+                        <i class="fas fa-sitemap"></i>
+                        소속 정보
+                    </h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">회사</span>
+                            <span class="info-value" id="detailCompany">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">그룹</span>
+                            <span class="info-value" id="detailGroup">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">위치</span>
+                            <span class="info-value" id="detailLocation">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 센서 타입별 추가 정보 -->
+                <div class="info-section" id="sensorSpecificInfo" style="display: none;">
+                    <h3 class="info-section-title">
+                        <i class="fas fa-cog"></i>
+                        <span id="specificInfoTitle">설정 정보</span>
+                    </h3>
+                    <div class="info-grid" id="specificInfoContent">
+                        <!-- 센서 타입별 동적 내용 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 우측: 데이터 패널 -->
+            <div class="sensor-data-panel">
+                <!-- 상단: 실시간 차트 -->
+                <div class="realtime-chart-section">
+                    <div class="section-header">
+                        <h3 class="section-title">
+                            <i class="fas fa-chart-line"></i>
+                            실시간 데이터
+                        </h3>
+                        <div class="realtime-controls">
+                            <button id="toggleRealtimeBtn" class="btn btn-sm btn-primary">
+                                <i class="fas fa-pause"></i>
+                                일시정지
+                            </button>
+                            <select id="realtimeInterval" class="form-select form-select-sm">
+                                <option value="60">최근 1분</option>
+                                <option value="300" selected>최근 5분</option>
+                                <option value="600">최근 10분</option>
+                                <option value="1800">최근 30분</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="realtimeChart"></canvas>
+                    </div>
+                    <div class="realtime-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">현재값</span>
+                            <span class="stat-value" id="currentValue">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">평균</span>
+                            <span class="stat-value" id="avgValue">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">최대</span>
+                            <span class="stat-value" id="maxValue">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">최소</span>
+                            <span class="stat-value" id="minValue">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 하단: 히스토리 데이터 조회 -->
+                <div class="history-data-section">
+                    <div class="section-header">
+                        <h3 class="section-title">
+                            <i class="fas fa-database"></i>
+                            히스토리 데이터 조회
+                        </h3>
+                    </div>
+
+                    <div class="history-controls">
+                        <div class="date-range-picker">
+                            <div class="date-input-group">
+                                <label>시작일시</label>
+                                <input type="text" id="historyStartDate" class="form-control" placeholder="시작일 선택">
+                            </div>
+                            <div class="date-input-group">
+                                <label>종료일시</label>
+                                <input type="text" id="historyEndDate" class="form-control" placeholder="종료일 선택">
+                            </div>
+                            <button id="loadHistoryBtn" class="btn btn-primary">
+                                <i class="fas fa-search"></i>
+                                조회
+                            </button>
+                        </div>
+
+                        <div class="export-controls">
+                            <button id="exportCsvBtn" class="btn btn-success" disabled>
+                                <i class="fas fa-file-csv"></i>
+                                CSV 내보내기
+                            </button>
+                            <button id="exportExcelBtn" class="btn btn-success" disabled>
+                                <i class="fas fa-file-excel"></i>
+                                Excel 내보내기
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="history-grid-container">
+                        <div id="historyDataGrid"></div>
+                    </div>
+
+                    <div class="history-summary" id="historySummary" style="display: none;">
+                        <span class="summary-item">
+                            <i class="fas fa-chart-bar"></i>
+                            총 <span id="totalRecords">0</span>개 레코드
+                        </span>
+                        <span class="summary-item">
+                            <i class="fas fa-calendar-alt"></i>
+                            기간: <span id="dataPeriod">-</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

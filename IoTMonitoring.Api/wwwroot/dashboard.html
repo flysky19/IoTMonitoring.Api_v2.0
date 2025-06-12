@@ -3,26 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IoT 센서 모니터링 시스템</title>
+    <title>IoT Sensor Monitoring</title>
 
-    <!-- SyncFusion Theme CSS -->
-    <link href="https://cdn.syncfusion.com/ej2/24.1.41/material-dark.css" rel="stylesheet" />
+    <!-- CSS 파일들 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <!-- Flatpickr (Date Picker) -->
+    <!-- Flatpickr CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
 
-    <!-- SweetAlert2 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    <!-- Choices.js (Dropdown) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
 
     <!-- Toastify (Toast Notifications) -->
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
@@ -34,12 +27,21 @@
     <!-- SignalR -->
     <script src="https://unpkg.com/@microsoft/signalr@latest/dist/browser/signalr.min.js"></script>
 
-    <!-- SyncFusion Scripts -->
-    <script src="https://cdn.syncfusion.com/ej2/24.1.41/dist/ej2.min.js"></script>
+    <!-- SyncFusion CSS (29.1.33) -->
+    <link href="https://cdn.syncfusion.com/ej2/29.1.33/ej2-base/styles/material3-dark.css" rel="stylesheet" />
+    <link href="https://cdn.syncfusion.com/ej2/29.1.33/ej2-buttons/styles/material3-dark.css" rel="stylesheet" />
+    <link href="https://cdn.syncfusion.com/ej2/29.1.33/ej2-calendars/styles/material3-dark.css" rel="stylesheet" />
+    <link href="https://cdn.syncfusion.com/ej2/29.1.33/ej2-dropdowns/styles/material3-dark.css" rel="stylesheet" />
+    <link href="https://cdn.syncfusion.com/ej2/29.1.33/ej2-inputs/styles/material3-dark.css" rel="stylesheet" />
+    <link href="https://cdn.syncfusion.com/ej2/29.1.33/ej2-navigations/styles/material3-dark.css" rel="stylesheet" />
+    <link href="https://cdn.syncfusion.com/ej2/29.1.33/ej2-popups/styles/material3-dark.css" rel="stylesheet" />
+    <link href="https://cdn.syncfusion.com/ej2/29.1.33/ej2-splitbuttons/styles/material3-dark.css" rel="stylesheet" />
+    <link href="https://cdn.syncfusion.com/ej2/29.1.33/ej2-grids/styles/material3-dark.css" rel="stylesheet" />
 
-    <!-- Custom CSS -->
-    <!--<link rel="stylesheet" href="/public/css/common.css" />-->
-    <link rel="stylesheet" href="public/css/dashboard.css" />
+
+    <!-- 사용자 정의 CSS -->
+    <link rel="stylesheet" href="public/css/dashboard.css">
+    <link rel="stylesheet" href="public/css/sensor-detail-model.css">
 </head>
 <body>
     <!-- Loading Overlay -->
@@ -291,8 +293,44 @@
     <!-- Toast Container -->
     <div id="toastContainer"></div>
 
-    <!-- Custom Scripts -->
-    <!--<script src="public/js/common.js"></script>-->
+    <!-- 3. SyncFusion JavaScript (29.1.33) -->
+    <script src="https://cdn.syncfusion.com/ej2/29.1.33/dist/ej2.min.js"></script>
+
+    <!-- 1. jQuery 먼저 로드 (가장 중요!) -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <!-- 2. Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- 3. Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- 4. Flatpickr -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
+
+    <!-- 5. DataTables Core (jQuery 다음에 와야 함) -->
+    <script type="text/javascript" src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+
+    <!-- 6. DataTables Extensions -->
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+
+    <!-- 7. Export 라이브러리들 -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+
+    <!-- 8. XLSX for Excel export -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+
+    <!-- 9. 사용자 스크립트들 (가장 마지막) -->
+    <!--<script src="/public/js/common.js"></script>
+    <script src="/public/js/api.js"></script>-->
+
+    <script src="public/js/sensor-detail-model.js"></script>
     <script src="public/js/dashboard.js"></script>
 </body>
 </html>
