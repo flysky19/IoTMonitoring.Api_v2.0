@@ -1,0 +1,314 @@
+/* ===== Sensor Type Specific Styles ===== */
+
+/* 센서 타입별 색상 정의 */
+:root {
+    /* 미세먼지 센서 - 보라색 계열 */
+    --particle-primary: #9c27b0;
+    --particle-secondary: #e1bee7;
+    --particle-bg: rgba(156, 39, 176, 0.1);
+    --particle-border: rgba(156, 39, 176, 0.3);
+    /* 온습도 센서 - 파란색/주황색 계열 */
+    --temp-primary: #2196f3;
+    --temp-secondary: #ff6f00;
+    --temp-bg: rgba(33, 150, 243, 0.1);
+    --temp-border: rgba(33, 150, 243, 0.3);
+    /* 풍속 센서 - 청록색 계열 */
+    --wind-primary: #00bcd4;
+    --wind-secondary: #b2ebf2;
+    --wind-bg: rgba(0, 188, 212, 0.1);
+    --wind-border: rgba(0, 188, 212, 0.3);
+    /* 스피커 - 황금색 계열 */
+    --speaker-primary: #ffc107;
+    --speaker-secondary: #fff8e1;
+    --speaker-bg: rgba(255, 193, 7, 0.1);
+    --speaker-border: rgba(255, 193, 7, 0.3);
+}
+
+/* 센서 카드 타입별 스타일 */
+.sensor-card[data-sensor-type="particle"] {
+    background: linear-gradient(135deg, var(--card-bg) 0%, var(--particle-bg) 100%);
+    border-color: var(--particle-border);
+}
+
+    .sensor-card[data-sensor-type="particle"]::before {
+        background-color: var(--particle-primary);
+    }
+
+    .sensor-card[data-sensor-type="particle"] .sensor-type-icon {
+        background: var(--particle-primary);
+        color: white;
+        padding: 0.5rem;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        box-shadow: 0 2px 8px rgba(156, 39, 176, 0.3);
+    }
+
+    .sensor-card[data-sensor-type="particle"] .sensor-name {
+        color: var(--particle-primary);
+    }
+
+/* 온습도 센서 */
+.sensor-card[data-sensor-type="temp_humidity"] {
+    background: linear-gradient(135deg, var(--card-bg) 0%, var(--temp-bg) 100%);
+    border-color: var(--temp-border);
+}
+
+    .sensor-card[data-sensor-type="temp_humidity"]::before {
+        background-color: var(--temp-primary);
+    }
+
+    .sensor-card[data-sensor-type="temp_humidity"] .sensor-type-icon {
+        background: linear-gradient(45deg, var(--temp-primary) 50%, var(--temp-secondary) 50%);
+        color: white;
+        padding: 0.5rem;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+    }
+
+    .sensor-card[data-sensor-type="temp_humidity"] .sensor-name {
+        color: var(--temp-primary);
+    }
+
+/* 풍속 센서 */
+.sensor-card[data-sensor-type="wind"] {
+    background: linear-gradient(135deg, var(--card-bg) 0%, var(--wind-bg) 100%);
+    border-color: var(--wind-border);
+}
+
+    .sensor-card[data-sensor-type="wind"]::before {
+        background-color: var(--wind-primary);
+    }
+
+    .sensor-card[data-sensor-type="wind"] .sensor-type-icon {
+        background: var(--wind-primary);
+        color: white;
+        padding: 0.5rem;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 188, 212, 0.3);
+        animation: windRotate 3s linear infinite;
+    }
+
+@keyframes windRotate {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.sensor-card[data-sensor-type="wind"] .sensor-name {
+    color: var(--wind-primary);
+}
+
+/* 스피커 */
+.sensor-card[data-sensor-type="speaker"] {
+    background: linear-gradient(135deg, var(--card-bg) 0%, var(--speaker-bg) 100%);
+    border-color: var(--speaker-border);
+}
+
+    .sensor-card[data-sensor-type="speaker"]::before {
+        background-color: var(--speaker-primary);
+    }
+
+    .sensor-card[data-sensor-type="speaker"] .sensor-type-icon {
+        background: var(--speaker-primary);
+        color: #333;
+        padding: 0.5rem;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+    }
+
+    .sensor-card[data-sensor-type="speaker"][data-power="on"] .sensor-type-icon {
+        animation: speakerPulse 1.5s ease-in-out infinite;
+    }
+
+@keyframes speakerPulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+.sensor-card[data-sensor-type="speaker"] .sensor-name {
+    color: var(--speaker-primary);
+}
+
+/* 센서 타입 라벨 스타일 개선 */
+.sensor-type {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    margin-top: 0.5rem;
+}
+
+.sensor-card[data-sensor-type="particle"] .sensor-type {
+    background: var(--particle-bg);
+    color: var(--particle-primary);
+    border: 1px solid var(--particle-border);
+}
+
+.sensor-card[data-sensor-type="temp_humidity"] .sensor-type {
+    background: var(--temp-bg);
+    color: var(--temp-primary);
+    border: 1px solid var(--temp-border);
+}
+
+.sensor-card[data-sensor-type="wind"] .sensor-type {
+    background: var(--wind-bg);
+    color: var(--wind-primary);
+    border: 1px solid var(--wind-border);
+}
+
+.sensor-card[data-sensor-type="speaker"] .sensor-type {
+    background: var(--speaker-bg);
+    color: var(--speaker-primary);
+    border: 1px solid var(--speaker-border);
+}
+
+/* 데이터 값 스타일 개선 */
+.sensor-card[data-sensor-type="particle"] .data-value {
+    color: var(--particle-primary);
+    font-weight: 700;
+}
+
+.sensor-card[data-sensor-type="temp_humidity"] .data-item:first-child .data-value {
+    color: var(--temp-primary);
+}
+
+.sensor-card[data-sensor-type="temp_humidity"] .data-item:nth-child(2) .data-value {
+    color: var(--temp-secondary);
+}
+
+.sensor-card[data-sensor-type="wind"] .data-value {
+    color: var(--wind-primary);
+    font-weight: 700;
+}
+
+.sensor-card[data-sensor-type="speaker"] .data-value {
+    color: var(--speaker-primary);
+    font-weight: 700;
+}
+
+/* 오프라인 상태 스타일 */
+.sensor-card.offline {
+    filter: grayscale(80%);
+    opacity: 0.7;
+}
+
+    .sensor-card.offline .sensor-type-icon {
+        animation: none !important;
+        background: #666 !important;
+        box-shadow: none !important;
+    }
+
+/* 호버 효과 개선 */
+.sensor-card[data-sensor-type="particle"]:hover {
+    border-color: var(--particle-primary);
+    box-shadow: 0 4px 20px rgba(156, 39, 176, 0.3);
+}
+
+.sensor-card[data-sensor-type="temp_humidity"]:hover {
+    border-color: var(--temp-primary);
+    box-shadow: 0 4px 20px rgba(33, 150, 243, 0.3);
+}
+
+.sensor-card[data-sensor-type="wind"]:hover {
+    border-color: var(--wind-primary);
+    box-shadow: 0 4px 20px rgba(0, 188, 212, 0.3);
+}
+
+.sensor-card[data-sensor-type="speaker"]:hover {
+    border-color: var(--speaker-primary);
+    box-shadow: 0 4px 20px rgba(255, 193, 7, 0.3);
+}
+
+/* 센서 상태 인디케이터 개선 */
+.sensor-card[data-sensor-type="particle"] .status-indicator {
+    background-color: var(--particle-primary);
+    box-shadow: 0 0 0 2px rgba(156, 39, 176, 0.2);
+}
+
+.sensor-card[data-sensor-type="temp_humidity"] .status-indicator {
+    background-color: var(--temp-primary);
+    box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+}
+
+.sensor-card[data-sensor-type="wind"] .status-indicator {
+    background-color: var(--wind-primary);
+    box-shadow: 0 0 0 2px rgba(0, 188, 212, 0.2);
+}
+
+.sensor-card[data-sensor-type="speaker"] .status-indicator {
+    background-color: var(--speaker-primary);
+    box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.2);
+}
+
+/* PM 수치별 색상 (미세먼지 센서) */
+.sensor-card[data-sensor-type="particle"] .data-value {
+    font-size: 1.3rem;
+}
+
+    .sensor-card[data-sensor-type="particle"] .data-value.good {
+        color: #4caf50;
+    }
+
+    .sensor-card[data-sensor-type="particle"] .data-value.normal {
+        color: var(--particle-primary);
+    }
+
+    .sensor-card[data-sensor-type="particle"] .data-value.warning {
+        color: #ff9800;
+    }
+
+    .sensor-card[data-sensor-type="particle"] .data-value.danger {
+        color: #f44336;
+    }
+
+/* 리스트 뷰에서도 타입 구분 강화 */
+.sensor-list .sensor-card[data-sensor-type="particle"] {
+    border-left: 4px solid var(--particle-primary);
+}
+
+.sensor-list .sensor-card[data-sensor-type="temp_humidity"] {
+    border-left: 4px solid var(--temp-primary);
+}
+
+.sensor-list .sensor-card[data-sensor-type="wind"] {
+    border-left: 4px solid var(--wind-primary);
+}
+
+.sensor-list .sensor-card[data-sensor-type="speaker"] {
+    border-left: 4px solid var(--speaker-primary);
+}

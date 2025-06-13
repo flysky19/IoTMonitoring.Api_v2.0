@@ -224,7 +224,7 @@ namespace IoTMonitoring.Api.Services.MQTT
                 var sensorDataRepository = scope.ServiceProvider.GetRequiredService<ISensorDataRepository>();
                 var signalRService = scope.ServiceProvider.GetRequiredService<ISignalRService>(); // 추가
 
-                var sensors = await sensorService.GetAllSensorsAsync(null, null, null);
+                var sensors = await sensorService.GetAllSensorsAsync(null,null, null, null);
                 var sensor = sensors.FirstOrDefault(s => s.SensorUUID == sensorUuid);
 
                 if (sensor != null)
@@ -345,7 +345,7 @@ namespace IoTMonitoring.Api.Services.MQTT
                 var signalRService = scope.ServiceProvider.GetRequiredService<ISignalRService>(); // 추가
 
 
-                var sensors = await sensorService.GetAllSensorsAsync(null, null, null);
+                var sensors = await sensorService.GetAllSensorsAsync(null,null, null, null);
                 var sensor = sensors.FirstOrDefault(s => s.SensorUUID == sensorUuid);
 
                 if (sensor != null)
@@ -375,7 +375,7 @@ namespace IoTMonitoring.Api.Services.MQTT
                 var signalRService = scope.ServiceProvider.GetRequiredService<ISignalRService>();
 
                 // 센서 UUID로 센서 조회
-                var sensors = await sensorService.GetAllSensorsAsync(null, null, null);
+                var sensors = await sensorService.GetAllSensorsAsync(null,null, null, null);
                 var sensor = sensors.FirstOrDefault(s => s.SensorUUID == sensorUuid);
 
                 if (sensor == null)

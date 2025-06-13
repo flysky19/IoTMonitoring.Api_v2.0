@@ -113,7 +113,7 @@ function startDataPolling() {
     stopDataPolling();
 
     // 즉시 한 번 실행
-    pollSensorData();
+    //pollSensorData();
 
     // 새 폴링 시작
     pollingInterval = setInterval(async () => {
@@ -352,21 +352,26 @@ async function checkAuthentication() {
 }
 
 async function logout() {
-    // 확인 다이얼로그
-    const result = await Swal.fire({
-        title: '로그아웃',
-        text: '정말 로그아웃 하시겠습니까?',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: '로그아웃',
-        cancelButtonText: '취소',
-        background: '#1e1e1e',
-        color: '#fff'
-    });
+    // SweetAlert2가 있으면 사용, 없으면 기본 confirm 사용
+    let confirmed = false;
 
-    if (!result.isConfirmed) {
+    if (typeof Swal !== 'undefined') {
+        const result = await Swal.fire({
+            title: '로그아웃',
+            text: '정말 로그아웃 하시겠습니까?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: '로그아웃',
+            cancelButtonText: '취소',
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6'
+        });
+        confirmed = result.isConfirmed;
+    } else {
+        confirmed = confirm('정말 로그아웃 하시겠습니까?');
+    }
+
+    if (!confirmed) {
         return;
     }
 
@@ -678,22 +683,28 @@ function renderCompanyList() {
 }
 
 function selectCompany(companyId) {
-    // 이전 선택 제거
+    console.log('회사 선택:', companyId);
+
+    // UI 업데이트
     document.querySelectorAll('.company-card').forEach(card => {
         card.classList.remove('selected');
     });
 
-    // 새 선택 추가
     const selectedCard = document.querySelector(`[data-company-id="${companyId}"]`);
     if (selectedCard) {
         selectedCard.classList.add('selected');
     }
 
     selectedCompanyId = companyId;
+    selectedGroupId = null;
+
+    // 로딩 표시
+    showLoading(true);
 
     // 그룹 및 센서 로드
-    loadSensorGroups(companyId);
-    loadSensors();
+    loadSensorGroups(companyId).then(() => {
+        showLoading(false);
+    });
 }
 
 function refreshCompanies() {
@@ -716,6 +727,22 @@ async function loadSensorGroups(companyId) {
         if (response && response.ok) {
             sensorGroups = await response.json();
             updateGroupTreeView();
+
+            // 그룹이 있으면 첫 번째 그룹 자동 선택
+            if (sensorGroups.length > 0) {
+                selectGroup(sensorGroups[0].groupID);
+            } else {
+                // 그룹이 없으면 센서 영역 비우기
+                const container = document.getElementById('sensorGrid');
+                if (container) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-folder-open"></i>
+                            <p>등록된 센서 그룹이 없습니다.</p>
+                        </div>
+                    `;
+                }
+            }
         }
     } catch (error) {
         console.error('센서 그룹 로드 실패:', error);
@@ -729,16 +756,54 @@ async function loadSensorGroups(companyId) {
 async function loadSensors(groupId = null) {
     try {
         let url = '/api/sensors';
+
+        // 조건 체크 로그
         if (groupId) {
             url += `?groupId=${groupId}`;
         } else if (selectedCompanyId) {
-            url += `?companyId=${selectedCompanyId}`;
+            const response = await apiCall('/api/sensors');
+            if (response && response.ok) {
+                const allSensors = await response.json();
+
+                const companyGroupIds = sensorGroups
+                    .filter(g => g.companyID === selectedCompanyId)
+                    .map(g => g.groupID);
+
+                sensors = allSensors.filter(s =>
+                    s.groupID && companyGroupIds.includes(s.groupID)
+                );
+
+                renderSensors();
+
+                // 즉시 센서 데이터 업데이트
+                await updateSensorsData();
+                return;
+            }
+        } else {
+            const container = document.getElementById('sensorGrid');
+            if (container) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-building"></i>
+                        <p>회사를 선택해주세요.</p>
+                    </div>
+                `;
+            }
+            return;
         }
 
         const response = await apiCall(url);
         if (response && response.ok) {
             sensors = await response.json();
+
+            // 센서 목록 샘플 출력
+            if (sensors.length > 0) {
+                console.log('10. 첫 번째 센서:', sensors[0]);
+            }
+
             renderSensors();
+        } else {
+            console.log('10. API 응답 실패:', response?.status);
         }
     } catch (error) {
         console.error('센서 로드 실패:', error);
@@ -747,6 +812,44 @@ async function loadSensors(groupId = null) {
             type: 'error'
         });
     }
+}
+
+// 현재 표시된 센서들의 데이터를 즉시 업데이트
+async function updateSensorsData() {
+    if (sensors.length === 0) return;
+
+    console.log('센서 데이터 즉시 업데이트 시작...');
+
+    // 온라인 센서만 필터링
+    const onlineSensors = sensors.filter(sensor =>
+        sensor.connectionStatus === 'online'
+    );
+
+    if (onlineSensors.length === 0) {
+        console.log('온라인 센서가 없습니다.');
+        return;
+    }
+
+    // 병렬로 데이터 가져오기
+    const updatePromises = onlineSensors.map(async (sensor) => {
+        try {
+            const response = await apiCall(`/api/sensors/${sensor.sensorID}/data?limit=1`);
+
+            if (response && response.ok) {
+                const data = await response.json();
+                if (data && data.length > 0) {
+                    sensor.latestData = data[0];
+                    sensor.lastCommunication = data[0].timestamp;
+                    updateSensorCard(sensor);
+                }
+            }
+        } catch (error) {
+            console.error(`센서 ${sensor.sensorID} 데이터 업데이트 실패:`, error);
+        }
+    });
+
+    await Promise.all(updatePromises);
+    console.log('센서 데이터 즉시 업데이트 완료');
 }
 
 // ===== UI Updates =====
@@ -774,19 +877,27 @@ function updateGroupTreeView() {
 }
 
 function selectGroup(groupId) {
-    // 이전 선택 제거
+    console.log('그룹 선택:', groupId);
+
+    // UI 업데이트
     document.querySelectorAll('.tree-item').forEach(item => {
         item.classList.remove('selected');
     });
 
-    // 새 선택 추가
     const selectedItem = document.querySelector(`[data-group-id="${groupId}"]`);
     if (selectedItem) {
         selectedItem.classList.add('selected');
     }
 
     selectedGroupId = groupId;
-    loadSensors(groupId);
+
+    // 로딩 표시
+    showLoading(true);
+
+    // 센서 로드 (데이터 포함)
+    loadSensors(groupId).then(() => {
+        showLoading(false);
+    });
 }
 
 function renderSensors() {
@@ -813,6 +924,12 @@ function createSensorCard(sensor) {
     const card = document.createElement('div');
     card.className = `sensor-card ${!isOnline ? 'offline' : ''}`;
     card.dataset.sensorId = sensor.sensorID;
+    card.dataset.sensorType = sensor.sensorType; // 센서 타입 추가
+
+    // 스피커인 경우 전원 상태 추가
+    if (sensor.sensorType === 'speaker' && sensor.latestData) {
+        card.dataset.power = sensor.latestData.powerStatus ? 'on' : 'off';
+    }
 
     let dataHtml = '';
     if (sensor.latestData) {
@@ -830,12 +947,6 @@ function createSensorCard(sensor) {
                 `;
                 break;
             case 'particle':
-                // 디버깅을 위한 상세 로그
-                console.log('Particle sensor data:', sensor.latestData);
-                if (sensor.latestData) {
-                    console.log('Available fields:', Object.keys(sensor.latestData));
-                }
-
                 // 대소문자 구분 없이 값 가져오기
                 const getValue = (data, fieldNames) => {
                     if (!data) return '--';
@@ -886,7 +997,7 @@ function createSensorCard(sensor) {
                 dataHtml = `
                     <div class="data-item">
                         <div class="data-label">상태</div>
-                        <div class="data-value">${sensor.latestData.powerStatus ? '🔊 ON' : '🔇 OFF'}</div>
+                        <div class="data-value">${sensor.latestData.powerStatus ? '🔊 켜짐' : '🔇 꺼짐'}</div>
                     </div>
                     <div class="data-item">
                         <div class="data-label">볼륨</div>
@@ -1296,7 +1407,7 @@ async function refreshSensors() {
         }
 
         // 온라인 센서 데이터 즉시 업데이트
-        await pollSensorData();
+        //await pollSensorData();
 
         showToast({
             message: '센서 목록이 새로고침되었습니다.',

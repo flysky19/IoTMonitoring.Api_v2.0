@@ -47,127 +47,12 @@ async function handleLogin(e) {
 
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
-
-    try {
-        const response = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ username, password })
-        });
-
-        const data = await response.json();
-        console.log('로그인 응답:', data);
-
-        if (response.ok) {
-            // 토큰 저장
-            localStorage.setItem('authToken', data.authToken);
-
-            // 통합된 userInfo 객체 생성 및 저장
-            const userInfo = {
-                userId: data.userId,
-                username: data.username,
-                fullName: data.fullName || '',
-                role: data.role || 'User',
-                email: data.email || '',
-                expiration: data.expiration
-            };
-
-            // 중요: JSON 문자열로 저장
-            localStorage.setItem('userInfo', JSON.stringify(userInfo));
-
-            // 개별 필드들은 제거 (선택사항)
-            localStorage.removeItem('userId');
-            localStorage.removeItem('username');
-            localStorage.removeItem('fullName');
-            localStorage.removeItem('expiration');
-
-            console.log('저장 완료:', {
-                token: localStorage.getItem('authToken'),
-                userInfo: localStorage.getItem('userInfo')
-            });
-
-            // 대시보드로 이동
-            window.location.replace('/dashboard.html');
-        }
-    } catch (error) {
-        console.error('로그인 오류:', error);
-    }
-}
-
-function showError(message) {
-    const errorElement = document.getElementById('errorMessage');
-    if (errorElement) {
-        errorElement.textContent = message;
-        errorElement.style.display = message ? 'block' : 'none';
-    }
-}
-
-// 페이지 로드 시 저장된 계정 정보 불러오기 및 인증 체크
-document.addEventListener('DOMContentLoaded', function () {
-
-    console.log('Login 페이지 로드');
-
-    
-
-    //const token = localStorage.getItem('authToken');
-    //const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-
-    //if (token && userInfo.userId) {
-    //    // 토큰 만료 확인
-    //    if (!userInfo.expiration || new Date(userInfo.expiration) > new Date()) {
-    //        console.log('이미 로그인됨 - 대시보드로 이동');
-    //        if (userRole === 'Admin' || userRole === 'admin') {
-    //            window.location.replace('/admin-management.html');
-    //        } else {
-    //            window.location.replace('/dashboard.html');
-    //        }
-    //        return;
-    //    }
-    //}
-
-    //const savedUsername = localStorage.getItem('savedUsername');
-    //const savedPassword = localStorage.getItem('savedPassword');
-    //const rememberMe = localStorage.getItem('rememberMe') === 'true';
-    //if (rememberMe && savedUsername) {
-    //    document.getElementById('username').value = savedUsername;
-    //    document.getElementById('rememberMe').checked = true;
-    //    if (savedPassword) document.getElementById('password').value = savedPassword;
-    //}
-    //if (localStorage.getItem('authToken')) {
-    //    const userRole = localStorage.getItem('userRole');
-    //    if (userRole === 'Admin' || userRole === 'admin') {
-    //        window.location.href = '/admin-management.html';
-    //    } else {
-    //        window.location.href = '/dashboard.html';
-    //    }
-    //}
-    //document.getElementById('username').focus();
-
-    // 로그인 폼 찾기
-    const loginForm = document.getElementById('loginForm');
-
-    // 폼 제출 이벤트에 handleLogin 연결
-    if (loginForm) {
-        loginForm.addEventListener('submit', handleLogin);
-    }
-
-});
-
-
-// 로그인 폼 제출 처리
-document.getElementById('loginForm').addEventListener('submit', async function (e) {
-    e.preventDefault();
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
     const rememberMe = document.getElementById('rememberMe').checked;
     const loginBtn = document.getElementById('loginBtn');
     const errorMessage = document.getElementById('errorMessage');
 
     if (!username.trim() || !password.trim()) {
-        errorMessage.textContent = '사용자명과 비밀번호를 모두 입력해주세요.';
-        errorMessage.style.display = 'block';
+        showError('사용자명과 비밀번호를 모두 입력해주세요.');
         return;
     }
 
@@ -177,60 +62,182 @@ document.getElementById('loginForm').addEventListener('submit', async function (
 
     try {
         const response = await fetch('/api/auth/login', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
         });
+
         if (!response.ok) {
             let err;
-            try { err = await response.json(); } catch { err = { message: `HTTP ${response.status} 오류` }; }
+            try {
+                err = await response.json();
+            } catch {
+                err = { message: `HTTP ${response.status} 오류` };
+            }
             throw new Error(err.message || '로그인에 실패했습니다.');
         }
+
         const data = await response.json();
-        localStorage.setItem('authToken', data.token);
-        localStorage.setItem('refreshToken', data.refreshToken);
-        localStorage.setItem('userId', data.userId);
-        localStorage.setItem('username', data.username);
-        localStorage.setItem('fullName', data.fullName);
-        localStorage.setItem('expiration', data.expiration);
-        localStorage.setItem('lastLogin', data.lastLogin);
+        console.log('로그인 응답:', data);
+
+        // 토큰 저장 (일관된 키 사용)
+        localStorage.setItem('authToken', data.token || data.authToken);
+
+        if (data.refreshToken) {
+            localStorage.setItem('refreshToken', data.refreshToken);
+        }
+
+        // 통합된 userInfo 객체 생성 및 저장
+        const userInfo = {
+            userId: data.userId,
+            username: data.username,
+            fullName: data.fullName || '',
+            role: data.role || 'User',
+            email: data.email || '',
+            expiration: data.expiration
+        };
+
+        localStorage.setItem('userInfo', JSON.stringify(userInfo));
+
+        // "아이디 저장" 처리
         if (rememberMe) {
             localStorage.setItem('savedUsername', username);
-            localStorage.setItem('savedPassword', password);
             localStorage.setItem('rememberMe', 'true');
         } else {
             localStorage.removeItem('savedUsername');
-            localStorage.removeItem('savedPassword');
             localStorage.removeItem('rememberMe');
         }
+
+        // 비밀번호는 저장하지 않음 (보안상 위험)
+        localStorage.removeItem('savedPassword');
+
         loginBtn.textContent = '로그인 성공! 이동 중...';
 
-        if (data.role === 'Admin' || data.role === 'admin') {
-            window.location.href = '/admin-management.html';
-        } else {
-            window.location.href = '/dashboard.html';
-        }
+        // 역할에 따른 리다이렉트
+        setTimeout(() => {
+            if (data.role === 'Admin' || data.role === 'admin') {
+                window.location.href = '/admin-management.html';
+            } else {
+                window.location.href = '/dashboard.html';
+            }
+        }, 500);
 
     } catch (err) {
-        errorMessage.textContent = err.message;
-        errorMessage.style.display = 'block';
-    } finally {
-        if (loginBtn.textContent !== '로그인 성공! 이동 중...') {
-            loginBtn.disabled = false;
-            loginBtn.textContent = '로그인';
-        }
+        showError(err.message);
+        loginBtn.disabled = false;
+        loginBtn.textContent = '로그인';
+    }
+}
+
+function showError(message) {
+    const errorElement = document.getElementById('errorMessage');
+    if (errorElement) {
+        errorElement.textContent = message;
+        errorElement.style.display = 'block';
+    }
+}
+
+// 페이지 로드 시 저장된 계정 정보 불러오기 및 인증 체크
+document.addEventListener('DOMContentLoaded', function () {
+
+    console.log('Login 페이지 로드');
+
+    // 저장된 아이디 불러오기
+    const savedUsername = localStorage.getItem('savedUsername');
+    const rememberMe = localStorage.getItem('rememberMe') === 'true';
+
+    if (rememberMe && savedUsername) {
+        document.getElementById('username').value = savedUsername;
+        document.getElementById('rememberMe').checked = true;
+    }
+
+    // 로그인 폼에 이벤트 리스너 연결 (하나만!)
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', handleLogin);
+    }
+
+    document.getElementById('username').focus();
+
+});
+
+
+// 로그인 폼 제출 처리
+//document.getElementById('loginForm').addEventListener('submit', async function (e) {
+//    e.preventDefault();
+//    const username = document.getElementById('username').value;
+//    const password = document.getElementById('password').value;
+//    const rememberMe = document.getElementById('rememberMe').checked;
+//    const loginBtn = document.getElementById('loginBtn');
+//    const errorMessage = document.getElementById('errorMessage');
+
+//    if (!username.trim() || !password.trim()) {
+//        errorMessage.textContent = '사용자명과 비밀번호를 모두 입력해주세요.';
+//        errorMessage.style.display = 'block';
+//        return;
+//    }
+
+//    loginBtn.disabled = true;
+//    loginBtn.textContent = '로그인 중...';
+//    errorMessage.style.display = 'none';
+
+//    try {
+//        const response = await fetch('/api/auth/login', {
+//            method: 'POST', headers: { 'Content-Type': 'application/json' },
+//            body: JSON.stringify({ username, password })
+//        });
+//        if (!response.ok) {
+//            let err;
+//            try { err = await response.json(); } catch { err = { message: `HTTP ${response.status} 오류` }; }
+//            throw new Error(err.message || '로그인에 실패했습니다.');
+//        }
+//        const data = await response.json();
+//        localStorage.setItem('authToken', data.token);
+//        localStorage.setItem('refreshToken', data.refreshToken);
+//        localStorage.setItem('userId', data.userId);
+//        localStorage.setItem('username', data.username);
+//        localStorage.setItem('fullName', data.fullName);
+//        localStorage.setItem('expiration', data.expiration);
+//        localStorage.setItem('lastLogin', data.lastLogin);
+//        if (rememberMe) {
+//            localStorage.setItem('savedUsername', username);
+//            localStorage.setItem('savedPassword', password);
+//            localStorage.setItem('rememberMe', 'true');
+//        } else {
+//            localStorage.removeItem('savedUsername');
+//            localStorage.removeItem('savedPassword');
+//            localStorage.removeItem('rememberMe');
+//        }
+//        loginBtn.textContent = '로그인 성공! 이동 중...';
+
+//        if (data.role === 'Admin' || data.role === 'admin') {
+//            window.location.href = '/admin-management.html';
+//        } else {
+//            window.location.href = '/dashboard.html';
+//        }
+
+//    } catch (err) {
+//        errorMessage.textContent = err.message;
+//        errorMessage.style.display = 'block';
+//    } finally {
+//        if (loginBtn.textContent !== '로그인 성공! 이동 중...') {
+//            loginBtn.disabled = false;
+//            loginBtn.textContent = '로그인';
+//        }
+//    }
+//});
+
+// 엔터키로 폼 제출
+document.getElementById('password')?.addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+        document.getElementById('loginForm').dispatchEvent(new Event('submit'));
     }
 });
 
-// 엔터키로 폼 제출
-document.getElementById('password').addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') document.getElementById('loginForm').dispatchEvent(new Event('submit'));
-});
-
 // 체크박스 변경 시 저장 정보 삭제
-document.getElementById('rememberMe').addEventListener('change', function (e) {
+document.getElementById('rememberMe')?.addEventListener('change', function (e) {
     if (!e.target.checked) {
         localStorage.removeItem('savedUsername');
-        localStorage.removeItem('savedPassword');
         localStorage.removeItem('rememberMe');
     }
 });

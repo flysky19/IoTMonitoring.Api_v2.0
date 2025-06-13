@@ -205,39 +205,109 @@
     overflow: hidden;
 }
 
-.history-controls {
+
+/* DataTables 페이지네이션 스타일 */
+.dataTables_wrapper .dataTables_paginate {
+    margin-top: 1rem;
+    padding: 0.5rem;
+    background-color: var(--sidebar-bg);
+    border-radius: 4px;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    padding: 0.375rem 0.75rem;
+    margin: 0 0.125rem;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary) !important;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    background-color: var(--hover-bg);
+    border-color: var(--primary-color);
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: white !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* DataTables 정보와 페이지 크기 선택 */
+.dataTables_wrapper .dataTables_info {
+    padding: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.dataTables_wrapper .dataTables_length {
+    margin-bottom: 1rem;
+}
+
+.history-grid-container .bottom {
+    flex: 0 0 auto;
     display: flex;
     justify-content: space-between;
-    align-items: flex-end;
+    align-items: center;
+    border-top: 1px solid var(--border-color);
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+}
+
+/* 페이지네이션이 보이도록 z-index 추가 */
+.history-grid-container .dataTables_paginate {
+    position: relative;
+    z-index: 10;
+}
+
+    .dataTables_wrapper .dataTables_length select {
+        background-color: var(--dark-bg);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        margin: 0 0.5rem;
+    }
+
+.history-controls {
     margin-bottom: 1rem;
-    gap: 1rem;
 }
 
 .date-range-picker {
     display: flex;
-    gap: 1rem;
+    gap: 0.75rem;
     align-items: flex-end;
+    flex-wrap: wrap;
 }
 
 .date-input-group {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
+    flex: 1;
+    min-width: 150px;
 }
 
-    .date-input-group label {
-        font-size: 0.85rem;
-        color: var(--text-secondary);
-        font-weight: 500;
-    }
+.date-input-group label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
 
-    .date-input-group .form-control {
-        width: 200px;
-    }
+.date-input-group .form-control {
+    width: 100%;
+}
 
+/* export-controls 섹션 제거하고 버튼들을 date-range-picker에 포함 */
 .export-controls {
-    display: flex;
-    gap: 0.5rem;
+    display: none; /* 기존 export-controls 숨김 */
 }
 
 .history-grid-container {
@@ -246,8 +316,17 @@
     border-radius: 8px;
     border: 1px solid var(--border-color);
     overflow: hidden;
-    min-height: 250px;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
 }
+
+/* 모든 버튼이 같은 높이에 정렬되도록 */
+.date-range-picker button {
+    align-self: flex-end;
+    white-space: nowrap;
+}
+
 
 .history-summary {
     display: flex;
@@ -270,6 +349,60 @@
     .summary-item i {
         color: var(--primary-color);
     }
+
+/* DataTables 스크롤 스타일 */
+.history-grid-container .dataTables_wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin: 0.5rem 0;
+}
+.history-grid-container .dataTables_scroll {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+.history-grid-container .dataTables_scrollBody {
+    flex: 1;
+    overflow-y: auto !important;
+}
+
+.history-grid-container .dataTables_scrollHead {
+    flex: 0 0 auto;
+}
+
+/* 스크롤바 스타일 */
+.history-grid-container .dataTables_scrollBody::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+.history-grid-container .dataTables_scrollBody::-webkit-scrollbar-track {
+    background: #1a1a1a;
+}
+
+.history-grid-container .dataTables_scrollBody::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 5px;
+}
+
+.history-grid-container .dataTables_scrollBody::-webkit-scrollbar-thumb:hover {
+    background: #777;
+}
+
+.history-grid-container .dataTables_info,
+.history-grid-container .dataTables_paginate {
+    flex: 0 0 auto;
+    padding: 0.5rem 1rem;
+    background-color: var(--sidebar-bg);
+}
+
+/* 모바일에서 스크롤 높이 조정 */
+@media (max-width: 768px) {
+    .history-grid-container .dataTables_scrollBody {
+        max-height: 300px !important;
+    }
+}
 
 /* ===== Form Controls in Modal ===== */
 .sensor-detail-modal .form-control {
@@ -506,4 +639,256 @@
         transform: translateY(0);
         opacity: 1;
     }
+}
+
+/* 데스크톱 (1200px 이상) */
+@media (min-width: 1200px) {
+    .sensor-detail-body {
+        display: flex;
+        flex-direction: row;
+        height: calc(100% - 60px);
+    }
+
+    .sensor-info-panel {
+        height: 100%;
+        overflow-y: auto;
+    }
+
+    .sensor-data-panel {
+        height: 100%;
+        overflow-y: auto;
+    }
+}
+
+/* 태블릿 가로 (1024px - 1199px) */
+@media (max-width: 1199px) and (min-width: 1024px) {
+    .date-input-group {
+        flex: 0 1 calc(33% - 0.5rem);
+        min-width: 140px;
+    }
+
+    .date-range-picker button {
+        flex: 0 0 auto;
+    }
+
+    .history-grid-container .dataTables_scrollBody {
+        max-height: calc(100vh - 550px) !important;
+    }
+}
+
+/* 태블릿 세로 (768px - 1023px) */
+@media (max-width: 1023px) and (min-width: 768px) {
+    .sensor-detail-body {
+        flex-direction: column;
+        height: calc(100% - 60px);
+        overflow-y: auto;
+    }
+
+    .sensor-info-panel {
+        width: 100%;
+        border-right: none;
+        border-bottom: 2px solid var(--border-color);
+        max-height: 250px;
+        flex-shrink: 0;
+    }
+
+    .sensor-data-panel {
+        width: 100%;
+        min-height: 0;
+    }
+
+    .date-range-picker {
+        justify-content: space-between;
+    }
+
+    .date-input-group {
+        flex: 0 1 calc(50% - 0.5rem);
+    }
+
+    .date-range-picker button {
+        flex: 0 0 auto;
+        padding: 0.5rem 0.75rem;
+    }
+
+        .date-range-picker button i {
+            margin-right: 0.25rem;
+        }
+
+        /* 내보내기 버튼 텍스트 숨김 */
+        .date-range-picker button:not(#loadHistoryBtn) span {
+            display: none;
+        }
+
+    .history-grid-container .dataTables_scrollBody {
+        max-height: calc(100vh - 600px) !important;
+    }
+}
+
+/* 모바일 (767px 이하) */
+@media (max-width: 767px) {
+    .sensor-detail-modal {
+        padding: 0;
+    }
+
+    .sensor-detail-dialog {
+        width: 100%;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+
+    .sensor-info-panel {
+        padding: 1rem;
+        max-height: 200px;
+    }
+
+    .realtime-chart-section,
+    .history-data-section {
+        padding: 1rem;
+    }
+
+    .date-range-picker {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+
+    .date-input-group {
+        width: 100%;
+        flex: none;
+    }
+
+    .date-range-picker button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* 모바일에서 버튼 순서 조정 */
+    #loadHistoryBtn {
+        order: -1; /* 조회 버튼을 가장 위로 */
+    }
+
+    .chart-container {
+        min-height: 200px;
+    }
+
+    .realtime-stats {
+        gap: 1rem;
+    }
+
+    .stat-value {
+        font-size: 1.2rem;
+    }
+
+    .history-grid-container .dataTables_scrollBody {
+        max-height: calc(100vh - 650px) !important;
+        min-height: 150px !important;
+    }
+}
+
+/* 작은 모바일 (480px 이하) */
+@media (max-width: 480px) {
+    .sensor-detail-title {
+        font-size: 1.1rem;
+    }
+
+    #sensorDetailIcon {
+        font-size: 1.5rem;
+    }
+
+    .info-grid {
+        font-size: 0.85rem;
+    }
+
+    .realtime-stats {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .stat-item {
+        flex-direction: row;
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    /* 매우 작은 화면에서는 아이콘만 표시 */
+    .date-range-picker button span {
+        display: none;
+    }
+
+    .date-range-picker button {
+        padding: 0.5rem;
+    }
+}
+
+/* 스크롤바 스타일 개선 */
+.sensor-info-panel::-webkit-scrollbar,
+.sensor-data-panel::-webkit-scrollbar,
+.history-table-container::-webkit-scrollbar,
+.dataTables_scrollBody::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.sensor-info-panel::-webkit-scrollbar-track,
+.sensor-data-panel::-webkit-scrollbar-track,
+.history-table-container::-webkit-scrollbar-track,
+.dataTables_scrollBody::-webkit-scrollbar-track {
+    background: var(--dark-bg);
+}
+
+.sensor-info-panel::-webkit-scrollbar-thumb,
+.sensor-data-panel::-webkit-scrollbar-thumb,
+.history-table-container::-webkit-scrollbar-thumb,
+.dataTables_scrollBody::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 4px;
+}
+
+    .sensor-info-panel::-webkit-scrollbar-thumb:hover,
+    .sensor-data-panel::-webkit-scrollbar-thumb:hover,
+    .history-table-container::-webkit-scrollbar-thumb:hover,
+    .dataTables_scrollBody::-webkit-scrollbar-thumb:hover {
+        background: #777;
+    }
+
+/* DataTables 반응형 오버라이드 */
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter {
+    margin-bottom: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dataTables_filter {
+        float: none;
+        text-align: center;
+    }
+
+    .dataTables_wrapper .dataTables_paginate {
+        float: none;
+        text-align: center;
+        margin-top: 0.5rem;
+    }
+}
+
+/* 스크롤과 페이지네이션이 함께 동작하도록 */
+.dataTables_scrollBody {
+    margin-bottom: 0 !important;
+}
+
+.dataTables_scrollFoot {
+    margin-top: 0 !important;
+}
+
+/* 반응형에서 페이지네이션 보이도록 */
+@media (max-width: 768px) {
+    .dataTables_wrapper .dataTables_paginate {
+        text-align: center;
+    }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
 }

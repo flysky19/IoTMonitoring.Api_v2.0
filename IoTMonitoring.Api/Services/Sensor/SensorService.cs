@@ -40,13 +40,13 @@ namespace IoTMonitoring.Api.Services.Sensor
 
         #region 센서 기본 CRUD 작업
 
-        public async Task<IEnumerable<SensorDto>> GetAllSensorsAsync(int? groupId = null, string status = null, string connectionStatus = null)
+        public async Task<IEnumerable<SensorDto>> GetAllSensorsAsync(int? companyId = null, int? groupId = null, string status = null, string connectionStatus = null)
         {
             try
             {
-                _logger.LogInformation($"센서 목록 조회 시작 - GroupId: {groupId}, Status: {status}, ConnectionStatus: {connectionStatus}");
+                _logger.LogInformation($"센서 목록 조회 시작 - CompanyId: {companyId},GroupId: {groupId}, Status: {status}, ConnectionStatus: {connectionStatus}");
 
-                var sensors = await _sensorRepository.GetSensorsWithFiltersAsync(groupId, status, connectionStatus);
+                var sensors = await _sensorRepository.GetSensorsWithFiltersAsync(companyId, groupId, status, connectionStatus);
                 var result = sensors.Select(_sensorMapper.ToDto).ToList();
 
                 _logger.LogInformation($"센서 목록 조회 완료 - 조회된 센서 수: {result.Count}");

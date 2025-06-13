@@ -54,7 +54,7 @@ namespace IoTMonitoring.Api.Services.Sensor
             throw new NotImplementedException();
         }
 
-        public async Task<IEnumerable<SensorDto>> GetAllSensorsAsync(int? groupId = null, string status = null, string connectionStatus = null)
+        public async Task<IEnumerable<SensorDto>> GetAllSensorsAsync(int? companyId, int? groupId = null, string status = null, string connectionStatus = null)
         {
             _logger.LogInformation("GetAllSensorsAsync 호출됨");
 

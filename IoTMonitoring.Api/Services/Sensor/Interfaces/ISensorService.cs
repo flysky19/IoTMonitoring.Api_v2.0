@@ -9,7 +9,7 @@ namespace IoTMonitoring.Api.Services.Sensor.Interfaces
     public interface ISensorService
     {
         // 센서 기본 CRUD 작업
-        Task<IEnumerable<SensorDto>> GetAllSensorsAsync(int? groupId = null, string status = null, string connectionStatus = null);
+        Task<IEnumerable<SensorDto>> GetAllSensorsAsync(int? companyId = null, int? groupId = null, string status = null, string connectionStatus = null);
         Task<SensorDetailDto> GetSensorDetailAsync(int id);
         Task<SensorDetailDto> GetSensorByUUIDAsync(string sensorUUID); // 추가: UUID로 조회
         Task<SensorDetailDto> CreateSensorAsync(SensorCreateDto sensorDto);

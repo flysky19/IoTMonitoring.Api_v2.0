@@ -10,13 +10,8 @@ let historyEndPicker = null;
 
 // HTML 로드 함수
 async function loadSensorDetailModalHTML() {
-    try {
-            insertSensorDetailModalHTML();
-    } catch (error) {
-        console.error('센서 상세 모달 로드 중 오류:', error);
-        // 대체 HTML 직접 삽입
-        insertSensorDetailModalHTML();
-    }
+    // 바로 HTML 삽입 (파일 로드 시도 제거)
+    insertSensorDetailModalHTML();
 }
 
 // 대체 HTML 삽입 함수
@@ -151,6 +146,8 @@ function insertSensorDetailModalHTML() {
                                     <option value="300" selected>최근 5분</option>
                                     <option value="600">최근 10분</option>
                                     <option value="1800">최근 30분</option>
+                                    <option value="3600">최근 1시간</option>
+                                    <option value="limit">최근 50개</option>
                                 </select>
                             </div>
                         </div>
@@ -200,9 +197,6 @@ function insertSensorDetailModalHTML() {
                                     <i class="fas fa-search"></i>
                                     조회
                                 </button>
-                            </div>
-                            
-                            <div class="export-controls">
                                 <button id="exportCsvBtn" class="btn btn-success" disabled>
                                     <i class="fas fa-file-csv"></i>
                                     CSV 내보내기
@@ -242,7 +236,7 @@ function insertSensorDetailModalHTML() {
 // 한국어 날짜 파싱 함수
 function parseKoreanDateTime(dateTimeStr) {
     if (!dateTimeStr) return null;
-    console.log('날짜 형식:', dateTimeStr);
+
     try {
         let date;
 
@@ -526,10 +520,42 @@ function initializeRealtimeChart() {
             plugins: {
                 legend: {
                     display: datasets.length > 1,
-                    labels: { color: '#fff' }
+                    labels: {
+                        color: '#fff',
+                        usePointStyle: true,
+                        padding: 10,
+                        font: {
+                            size: 11
+                        }
+                    },
+                    onClick: function (e, legendItem, legend) {
+                        const index = legendItem.datasetIndex;
+                        const ci = legend.chart;
+                        const meta = ci.getDatasetMeta(index);
+
+                        // 토글
+                        meta.hidden = meta.hidden === null ? !ci.data.datasets[index].hidden : null;
+                        ci.update();
+                    }
                 },
                 title: {
                     display: false
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: {
+                        label: function (context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += context.parsed.y.toFixed(1);
+                            }
+                            return label;
+                        }
+                    }
                 }
             },
             scales: {
@@ -591,18 +617,52 @@ function createDatasets(sensorType) {
         case 'particle':
             return [
                 {
-                    label: 'PM2.5',
+                    label: 'PM0.3',
                     data: [],
                     borderColor: 'rgb(255, 99, 132)',
                     backgroundColor: 'rgba(255, 99, 132, 0.1)',
-                    tension: 0.4
+                    tension: 0.4,
+                    hidden: true
+                },
+                {
+                    label: 'PM0.5',
+                    data: [],
+                    borderColor: 'rgb(255, 159, 64)',
+                    backgroundColor: 'rgba(255, 159, 64, 0.1)',
+                    tension: 0.4,
+                    hidden: false
+                },
+                {
+                    label: 'PM1.0',
+                    data: [],
+                    borderColor: 'rgb(255, 205, 86)',
+                    backgroundColor: 'rgba(255, 205, 86, 0.1)',
+                    tension: 0.4,
+                    hidden: false
+                },
+                {
+                    label: 'PM2.5',
+                    data: [],
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                    tension: 0.4,
+                    hidden: false
+                },
+                {
+                    label: 'PM5.0',
+                    data: [],
+                    borderColor: 'rgb(54, 162, 235)',
+                    backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                    tension: 0.4,
+                    hidden: false
                 },
                 {
                     label: 'PM10',
                     data: [],
-                    borderColor: 'rgb(54, 162, 235)',
-                    backgroundColor: 'rgba(54, 162, 235, 0.1)',
-                    tension: 0.4
+                    borderColor: 'rgb(153, 102, 255)',
+                    backgroundColor: 'rgba(153, 102, 255, 0.1)',
+                    tension: 0.4,
+                    hidden: true
                 }
             ];
 
@@ -658,11 +718,37 @@ async function updateRealtimeData() {
 
     try {
         // 선택된 시간 범위
-        const intervalMinutes = parseInt(document.getElementById('realtimeInterval').value) / 60;
+        const intervalSeconds = parseInt(document.getElementById('realtimeInterval').value);
         const endTime = new Date();
-        const startTime = new Date(endTime.getTime() - intervalMinutes * 60 * 1000);
+        const startTime = new Date(endTime.getTime() - intervalSeconds * 1000);
 
-        // 데이터 가져오기
+        console.log('실시간 데이터 요청:', {
+            sensorID: detailModalSensor.sensorID,
+            startTime: startTime.toISOString(),
+            endTime: endTime.toISOString()
+        });
+
+        // 먼저 limit로 최신 데이터를 가져와서 확인
+        const latestResponse = await apiCall(`/api/sensors/${detailModalSensor.sensorID}/data?limit=10`);
+
+        if (latestResponse && latestResponse.ok) {
+            const latestData = await latestResponse.json();
+            console.log('최신 데이터 10개:', latestData);
+
+            if (latestData && latestData.length > 0) {
+                // 가장 최신 데이터의 시간 확인
+                const newestTimestamp = new Date(latestData[0].timestamp || latestData[0].Timestamp);
+                const oldestTimestamp = new Date(latestData[latestData.length - 1].timestamp || latestData[latestData.length - 1].Timestamp);
+
+                console.log('데이터 시간 범위:', {
+                    newest: newestTimestamp.toISOString(),
+                    oldest: oldestTimestamp.toISOString(),
+                    현재시간과차이: (endTime - newestTimestamp) / 1000 + '초'
+                });
+            }
+        }
+
+        // 원래 요청도 실행
         const response = await apiCall(
             `/api/sensors/${detailModalSensor.sensorID}/data?` +
             `startDate=${startTime.toISOString()}&endDate=${endTime.toISOString()}`
@@ -670,8 +756,46 @@ async function updateRealtimeData() {
 
         if (response && response.ok) {
             const data = await response.json();
-            updateRealtimeChart(data);
-            updateRealtimeStats(data);
+            console.log('시간 범위 데이터 수신:', data.length + '개');
+
+            if (data && data.length > 0) {
+                updateRealtimeChart(data);
+                updateRealtimeStats(data);
+            } else {
+                console.warn('받은 데이터가 비어있습니다. limit 방식으로 재시도...');
+
+                // 데이터가 없으면 limit 방식으로 재시도
+                const limitCount = Math.max(20, Math.floor(intervalSeconds / 60)); // 최소 20개
+                const fallbackResponse = await apiCall(
+                    `/api/sensors/${detailModalSensor.sensorID}/data?limit=${limitCount}`
+                );
+
+                if (fallbackResponse && fallbackResponse.ok) {
+                    const fallbackData = await fallbackResponse.json();
+                    console.log('Fallback 데이터 수신:', fallbackData.length + '개');
+
+                    if (fallbackData && fallbackData.length > 0) {
+                        // 시간 범위에 맞는 데이터만 필터링
+                        const filteredData = fallbackData.filter(d => {
+                            const timestamp = new Date(d.timestamp || d.Timestamp);
+                            return timestamp >= startTime && timestamp <= endTime;
+                        });
+
+                        console.log('필터링된 데이터:', filteredData.length + '개');
+
+                        if (filteredData.length > 0) {
+                            updateRealtimeChart(filteredData);
+                            updateRealtimeStats(filteredData);
+                        } else {
+                            // 필터링 후에도 데이터가 없으면 전체 데이터 사용
+                            updateRealtimeChart(fallbackData);
+                            updateRealtimeStats(fallbackData);
+                        }
+                    }
+                }
+            }
+        } else {
+            console.error('API 응답 오류:', response.status);
         }
     } catch (error) {
         console.error('실시간 데이터 업데이트 실패:', error);
@@ -682,9 +806,14 @@ async function updateRealtimeData() {
 function updateRealtimeChart(data) {
     if (!realtimeChart || !data || data.length === 0) return;
 
+    console.log('실시간 차트 업데이트 - 데이터 수:', data.length);
+    if (data.length > 0) {
+        console.log('첫 번째 데이터 샘플:', data[0]);
+    }
+
     // 시간 레이블을 문자열로 변환
     const labels = data.map(d => {
-        const date = parseKoreanDateTime(d.timestamp);
+        const date = parseKoreanDateTime(d.timestamp || d.Timestamp);
         return date ? date.toLocaleTimeString('ko-KR') : '';
     });
 
@@ -698,10 +827,25 @@ function updateRealtimeChart(data) {
 
         case 'particle':
             realtimeChart.data.labels = labels;
-            realtimeChart.data.datasets[0].data = data.map(d => d.pm2_5 || d.pM2_5 || d.PM2_5);
-            if (realtimeChart.data.datasets[1]) {
-                realtimeChart.data.datasets[1].data = data.map(d => d.pm10 || d.pM10 || d.PM10);
-            }
+            // 모든 PM 값 매핑
+            realtimeChart.data.datasets[0].data = data.map(d =>
+                d.pm0_3 || d.pM0_3 || d.PM0_3 || d['PM0.3'] || d['pm0.3']
+            );
+            realtimeChart.data.datasets[1].data = data.map(d =>
+                d.pm0_5 || d.pM0_5 || d.PM0_5 || d['PM0.5'] || d['pm0.5']
+            );
+            realtimeChart.data.datasets[2].data = data.map(d =>
+                d.pm1_0 || d.pM1_0 || d.PM1_0 || d['PM1.0'] || d['pm1.0'] || d.pm1 || d.PM1
+            );
+            realtimeChart.data.datasets[3].data = data.map(d =>
+                d.pm2_5 || d.pM2_5 || d.PM2_5 || d['PM2.5'] || d['pm2.5']
+            );
+            realtimeChart.data.datasets[4].data = data.map(d =>
+                d.pm5_0 || d.pM5_0 || d.PM5_0 || d['PM5.0'] || d['pm5.0'] || d.pm5 || d.PM5
+            );
+            realtimeChart.data.datasets[5].data = data.map(d =>
+                d.pm10_0 || d.pM10_0 || d.PM10_0 || d.pm10 || d.pM10 || d.PM10 || d['PM10'] || d['pm10']
+            );
             break;
 
         case 'wind':
@@ -714,6 +858,9 @@ function updateRealtimeChart(data) {
             realtimeChart.data.datasets[0].data = data.map(d => d.volume);
             break;
     }
+
+    console.log('차트 레이블:', realtimeChart.data.labels.slice(0, 5));
+    console.log('차트 데이터셋 0:', realtimeChart.data.datasets[0].data.slice(0, 5));
 
     realtimeChart.update('none'); // 애니메이션 없이 업데이트
 }
@@ -735,27 +882,33 @@ function updateRealtimeStats(data) {
     switch (detailModalSensor.sensorType) {
         case 'temp_humidity':
             values = data.map(d => d.temperature).filter(v => v !== null && v !== undefined);
-            currentValue = data[data.length - 1].temperature ?
-                `${data[data.length - 1].temperature.toFixed(1)}°C / ${data[data.length - 1].humidity.toFixed(1)}%` : '-';
+            const lastTemp = data[data.length - 1];
+            currentValue = (lastTemp.temperature !== null && lastTemp.temperature !== undefined) ?
+                `${lastTemp.temperature.toFixed(1)}°C / ${lastTemp.humidity?.toFixed(1) || '-'}%` : '-';
             break;
 
         case 'particle':
-            values = data.map(d => d.pm2_5 || d.pM2_5 || d.PM2_5).filter(v => v !== null && v !== undefined);
+            values = data.map(d =>
+                d.pm2_5 || d.pM2_5 || d.PM2_5 || d['PM2.5'] || d['pm2.5']
+            ).filter(v => v !== null && v !== undefined);
             const lastData = data[data.length - 1];
-            currentValue = (lastData.pm2_5 || lastData.pM2_5 || lastData.PM2_5) ?
-                `PM2.5: ${(lastData.pm2_5 || lastData.pM2_5 || lastData.PM2_5).toFixed(0)}` : '-';
+            const pm25Value = lastData.pm2_5 || lastData.pM2_5 || lastData.PM2_5 || lastData['PM2.5'] || lastData['pm2.5'];
+            currentValue = pm25Value !== undefined && pm25Value !== null ?
+                `PM2.5: ${pm25Value.toFixed(0)}` : '-';
             break;
 
         case 'wind':
             values = data.map(d => d.windSpeed).filter(v => v !== null && v !== undefined);
-            currentValue = data[data.length - 1].windSpeed ?
-                `${data[data.length - 1].windSpeed.toFixed(1)} m/s` : '-';
+            const lastWind = data[data.length - 1];
+            currentValue = (lastWind.windSpeed !== null && lastWind.windSpeed !== undefined) ?
+                `${lastWind.windSpeed.toFixed(1)} m/s` : '-';
             break;
 
         case 'speaker':
             values = data.map(d => d.volume).filter(v => v !== null && v !== undefined);
-            currentValue = data[data.length - 1].volume !== undefined ?
-                `${data[data.length - 1].volume}%` : '-';
+            const lastSpeaker = data[data.length - 1];
+            currentValue = lastSpeaker.volume !== undefined ?
+                `${lastSpeaker.volume}%` : '-';
             break;
     }
 
@@ -769,6 +922,8 @@ function updateRealtimeStats(data) {
         document.getElementById('avgValue').textContent = avg.toFixed(1);
         document.getElementById('maxValue').textContent = max.toFixed(1);
         document.getElementById('minValue').textContent = min.toFixed(1);
+    } else {
+        console.warn('유효한 데이터 값이 없습니다.');
     }
 }
 
@@ -790,7 +945,18 @@ function toggleRealtimeChart() {
 
 // 실시간 간격 변경
 function handleRealtimeIntervalChange() {
-    // 차트 데이터 리셋 후 재로드
+    const intervalValue = document.getElementById('realtimeInterval').value;
+
+    // 차트 초기화 (새로운 데이터 범위에 맞게)
+    if (realtimeChart) {
+        realtimeChart.data.labels = [];
+        realtimeChart.data.datasets.forEach(dataset => {
+            dataset.data = [];
+        });
+        realtimeChart.update();
+    }
+
+    // 데이터 재로드
     updateRealtimeData();
 }
 
@@ -845,102 +1011,61 @@ function displayHistoryGrid(data) {
 
     // 첫 번째 데이터의 타임스탬프 형식 확인 (디버깅용)
     if (data.length > 0) {
-        console.log('타임스탬프 형식 샘플:', data[0].timestamp, typeof data[0].timestamp);
+        console.log('타임스탬프 형식 샘플:', data[0].Timestamp, typeof data[0].Timestamp);
     }
 
-    // 기존 내용 제거
+    // 기존 그리드 제거
+    if (historyDataGrid) {
+        historyDataGrid.destroy();
+        historyDataGrid = null;
+    }
     gridDiv.innerHTML = '';
 
-    // 컨테이너 생성
-    const container = document.createElement('div');
-    container.className = 'history-table-container';
-
-    // 검색 및 페이지 설정 컨트롤
-    const controls = document.createElement('div');
-    controls.className = 'table-controls mb-3';
-    controls.innerHTML = `
-        <div class="d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center gap-2">
-                <input type="text" id="historySearch" class="form-control form-control-sm" placeholder="검색..." style="width: 200px;">
-                <select id="historyPageSize" class="form-select form-select-sm" style="width: auto;">
-                    <option value="20">20개</option>
-                    <option value="50" selected>50개</option>
-                    <option value="100">100개</option>
-                    <option value="200">200개</option>
-                    <option value="-1">전체</option>
-                </select>
-            </div>
-            <div id="historyTableInfo" class="text-muted"></div>
-        </div>
-    `;
-    container.appendChild(controls);
-
-    // 테이블 생성
-    const table = document.createElement('table');
-    table.className = 'table table-dark table-striped table-hover';
-    table.id = 'historyTable';
+    // 테이블 HTML 생성
+    let tableHtml = '<table id="historyTable" class="table table-dark table-striped" style="width:100%"><thead><tr>';
 
     // 헤더 생성
-    const thead = document.createElement('thead');
-    const headerRow = document.createElement('tr');
+    tableHtml += '<th>시간</th>';
 
-    // 헤더 컬럼 정의
-    const headers = ['시간'];
     switch (detailModalSensor.sensorType) {
         case 'temp_humidity':
-            headers.push('온도 (°C)', '습도 (%)');
+            tableHtml += '<th>온도 (°C)</th><th>습도 (%)</th>';
             break;
         case 'particle':
-            headers.push('PM0.3', 'PM0.5', 'PM1.0', 'PM2.5', 'PM5.0', 'PM10');
+            tableHtml += '<th>PM0.3</th><th>PM0.5</th><th>PM1.0</th><th>PM2.5</th><th>PM5.0</th><th>PM10</th>';
             break;
         case 'wind':
-            headers.push('풍속 (m/s)');
+            tableHtml += '<th>풍속 (m/s)</th>';
             break;
         case 'speaker':
-            headers.push('전원', '볼륨', '주파수 (Hz)');
+            tableHtml += '<th>전원</th><th>볼륨</th><th>주파수 (Hz)</th>';
             break;
     }
 
-    headers.forEach((header, index) => {
-        const th = document.createElement('th');
-        th.innerHTML = `${header} <span class="sort-icon" data-col="${index}">⇅</span>`;
-        th.style.cursor = 'pointer';
-        headerRow.appendChild(th);
-    });
+    tableHtml += '</tr></thead><tbody>';
 
-    thead.appendChild(headerRow);
-    table.appendChild(thead);
-
-    // 바디 생성
-    const tbody = document.createElement('tbody');
-
-    // 데이터를 테이블용 배열로 변환
-    const tableData = data.map(row => {
-        const rowData = [];
+    // 데이터 행 생성
+    data.forEach(row => {
+        tableHtml += '<tr>';
 
         // 타임스탬프 처리
         let dateStr = '-';
         const date = parseKoreanDateTime(row.Timestamp);
-
-        console.log('타임스탬프 파싱:', row.Timestamp, date, typeof date);
-
         if (date) {
             dateStr = date.toLocaleString('ko-KR');
         } else if (row.Timestamp) {
             // 파싱 실패 시 원본 사용
             dateStr = row.Timestamp;
         }
-        rowData.push(dateStr);
+        tableHtml += `<td>${dateStr}</td>`;
 
-        // 센서 타입별 데이터 추가
         switch (detailModalSensor.sensorType) {
             case 'temp_humidity':
-                rowData.push(
-                    row.temperature?.toFixed(2) || '-',
-                    row.humidity?.toFixed(2) || '-'
-                );
+                tableHtml += `<td>${row.temperature?.toFixed(2) || '-'}</td>`;
+                tableHtml += `<td>${row.humidity?.toFixed(2) || '-'}</td>`;
                 break;
             case 'particle':
+                // 대소문자 구분 없이 값 가져오기
                 const getValue = (fieldNames) => {
                     for (const field of fieldNames) {
                         if (row[field] !== undefined && row[field] !== null) {
@@ -949,191 +1074,91 @@ function displayHistoryGrid(data) {
                     }
                     return '-';
                 };
-                rowData.push(
-                    getValue(['pm0_3', 'PM0_3', 'pM0_3']),
-                    getValue(['pm0_5', 'PM0_5', 'pM0_5']),
-                    getValue(['pm1_0', 'PM1_0', 'pM1_0']),
-                    getValue(['pm2_5', 'PM2_5', 'pM2_5']),
-                    getValue(['pm5_0', 'PM5_0', 'pM5_0']),
-                    getValue(['pm10_0', 'PM10_0', 'pM10_0', 'pm10', 'PM10'])
-                );
+
+                tableHtml += `<td>${getValue(['pm0_3', 'PM0_3', 'pM0_3'])}</td>`;
+                tableHtml += `<td>${getValue(['pm0_5', 'PM0_5', 'pM0_5'])}</td>`;
+                tableHtml += `<td>${getValue(['pm1_0', 'PM1_0', 'pM1_0'])}</td>`;
+                tableHtml += `<td>${getValue(['pm2_5', 'PM2_5', 'pM2_5'])}</td>`;
+                tableHtml += `<td>${getValue(['pm5_0', 'PM5_0', 'pM5_0'])}</td>`;
+                tableHtml += `<td>${getValue(['pm10_0', 'PM10_0', 'pM10_0', 'pm10', 'PM10'])}</td>`;
                 break;
             case 'wind':
-                rowData.push(row.windSpeed?.toFixed(2) || '-');
+                tableHtml += `<td>${row.windSpeed?.toFixed(2) || '-'}</td>`;
                 break;
             case 'speaker':
-                rowData.push(
-                    row.powerStatus ? 'ON' : 'OFF',
-                    row.volume || '-',
-                    row.frequency?.toFixed(1) || '-'
-                );
+                tableHtml += `<td>${row.powerStatus ? 'ON' : 'OFF'}</td>`;
+                tableHtml += `<td>${row.volume || '-'}</td>`;
+                tableHtml += `<td>${row.frequency?.toFixed(1) || '-'}</td>`;
                 break;
         }
 
-        return rowData;
+        tableHtml += '</tr>';
     });
 
-    table.appendChild(tbody);
-    container.appendChild(table);
+    tableHtml += '</tbody></table>';
+    gridDiv.innerHTML = tableHtml;
 
-    // 페이지네이션 컨테이너
-    const pagination = document.createElement('div');
-    pagination.className = 'pagination-container d-flex justify-content-center mt-3';
-    container.appendChild(pagination);
-
-    gridDiv.appendChild(container);
-
-    // 테이블 기능 구현
-    let currentPage = 1;
-    let pageSize = 50;
-    let sortColumn = 0;
-    let sortDirection = 'desc';
-    let filteredData = [...tableData];
-
-    // 테이블 업데이트 함수
-    function updateTable() {
-        const searchTerm = document.getElementById('historySearch').value.toLowerCase();
-
-        // 필터링
-        filteredData = tableData.filter(row =>
-            row.some(cell => String(cell).toLowerCase().includes(searchTerm))
-        );
-
-        // 정렬
-        filteredData.sort((a, b) => {
-            let aVal = a[sortColumn];
-            let bVal = b[sortColumn];
-
-            // 숫자 변환 시도
-            if (!isNaN(parseFloat(aVal)) && !isNaN(parseFloat(bVal))) {
-                aVal = parseFloat(aVal);
-                bVal = parseFloat(bVal);
-            }
-
-            if (sortDirection === 'asc') {
-                return aVal > bVal ? 1 : -1;
-            } else {
-                return aVal < bVal ? 1 : -1;
-            }
-        });
-
-        // 페이지 크기
-        const actualPageSize = pageSize === -1 ? filteredData.length : pageSize;
-        const totalPages = Math.ceil(filteredData.length / actualPageSize);
-
-        // 현재 페이지 데이터
-        const startIndex = (currentPage - 1) * actualPageSize;
-        const endIndex = startIndex + actualPageSize;
-        const pageData = filteredData.slice(startIndex, endIndex);
-
-        // 테이블 바디 업데이트
-        tbody.innerHTML = '';
-        pageData.forEach(rowData => {
-            const tr = document.createElement('tr');
-            rowData.forEach(cell => {
-                const td = document.createElement('td');
-                td.textContent = cell;
-                tr.appendChild(td);
-            });
-            tbody.appendChild(tr);
-        });
-
-        // 정보 업데이트
-        const info = document.getElementById('historyTableInfo');
-        info.textContent = `${startIndex + 1} - ${Math.min(endIndex, filteredData.length)} / 전체 ${filteredData.length}개`;
-
-        // 페이지네이션 업데이트
-        updatePagination(totalPages);
-    }
-
-    // 페이지네이션 업데이트
-    function updatePagination(totalPages) {
-        pagination.innerHTML = '';
-
-        if (totalPages <= 1) return;
-
-        const nav = document.createElement('nav');
-        const ul = document.createElement('ul');
-        ul.className = 'pagination';
-
-        // 이전 버튼
-        const prevLi = document.createElement('li');
-        prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
-        prevLi.innerHTML = '<a class="page-link" href="#">이전</a>';
-        prevLi.onclick = () => {
-            if (currentPage > 1) {
-                currentPage--;
-                updateTable();
-            }
-        };
-        ul.appendChild(prevLi);
-
-        // 페이지 번호
-        for (let i = 1; i <= Math.min(totalPages, 10); i++) {
-            const li = document.createElement('li');
-            li.className = `page-item ${i === currentPage ? 'active' : ''}`;
-            li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
-            li.onclick = () => {
-                currentPage = i;
-                updateTable();
-            };
-            ul.appendChild(li);
+    // DataTables 초기화
+    try {
+        // jQuery와 DataTables 존재 확인
+        if (typeof $ === 'undefined' || typeof $.fn.DataTable === 'undefined') {
+            console.error('jQuery 또는 DataTables가 로드되지 않았습니다.');
+            throw new Error('DataTables not available');
         }
 
-        // 다음 버튼
-        const nextLi = document.createElement('li');
-        nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
-        nextLi.innerHTML = '<a class="page-link" href="#">다음</a>';
-        nextLi.onclick = () => {
-            if (currentPage < totalPages) {
-                currentPage++;
-                updateTable();
+        historyDataGrid = $('#historyTable').DataTable({
+            pageLength: 50,
+            lengthMenu: [[20, 50, 100, 200, -1], [20, 50, 100, 200, "전체"]],
+            order: [[0, 'desc']],
+            scrollY: '400px',
+            scrollCollapse: true,
+            scrollX: true,
+            paging: true,
+            info: true,
+            searching: true,
+            dom: '<"top"lf>rt<"bottom"ip><"clear">',  // 커스텀 DOM 구조
+            language: {
+                "decimal": "",
+                "emptyTable": "데이터가 없습니다",
+                "info": "_START_ - _END_ / 전체 _TOTAL_개",
+                "infoEmpty": "0개",
+                "infoFiltered": "(전체 _MAX_개 중 검색결과)",
+                "infoPostFix": "",
+                "thousands": ",",
+                "lengthMenu": "_MENU_개씩 보기",
+                "loadingRecords": "로딩중...",
+                "processing": "처리중...",
+                "search": "검색:",
+                "zeroRecords": "검색된 데이터가 없습니다",
+                "paginate": {
+                    "first": "첫 페이지",
+                    "last": "마지막 페이지",
+                    "next": "다음",
+                    "previous": "이전"
+                },
+                "aria": {
+                    "sortAscending": ": 오름차순 정렬",
+                    "sortDescending": ": 내림차순 정렬"
+                }
             }
-        };
-        ul.appendChild(nextLi);
-
-        nav.appendChild(ul);
-        pagination.appendChild(nav);
-    }
-
-    // 이벤트 리스너
-    document.getElementById('historySearch').addEventListener('input', () => {
-        currentPage = 1;
-        updateTable();
-    });
-
-    document.getElementById('historyPageSize').addEventListener('change', (e) => {
-        pageSize = parseInt(e.target.value);
-        currentPage = 1;
-        updateTable();
-    });
-
-    // 정렬 이벤트
-    headerRow.querySelectorAll('th').forEach((th, index) => {
-        th.addEventListener('click', () => {
-            if (sortColumn === index) {
-                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-            } else {
-                sortColumn = index;
-                sortDirection = 'desc';
-            }
-            updateTable();
         });
-    });
 
-    // 초기 테이블 렌더링
-    updateTable();
+        // 내보내기 버튼은 그대로 유지
+        document.getElementById('exportCsvBtn').style.display = 'inline-block';
+        document.getElementById('exportExcelBtn').style.display = 'inline-block';
+        document.getElementById('exportCsvBtn').disabled = false;
+        document.getElementById('exportExcelBtn').disabled = false;
 
-    // 내보내기 버튼 활성화
-    document.getElementById('exportCsvBtn').style.display = 'inline-block';
-    document.getElementById('exportExcelBtn').style.display = 'inline-block';
+        console.log('DataTables 초기화 완료');
 
-    // 그리드 데이터 저장 (내보내기용)
-    historyDataGrid = {
-        data: tableData,
-        headers: headers,
-        rawData: data
-    };
+    } catch (error) {
+        console.error('DataTables 초기화 오류:', error);
+        // DataTables 초기화 실패 시에도 버튼 표시
+        document.getElementById('exportCsvBtn').style.display = 'inline-block';
+        document.getElementById('exportExcelBtn').style.display = 'inline-block';
+        document.getElementById('exportCsvBtn').disabled = false;
+        document.getElementById('exportExcelBtn').disabled = false;
+    }
 }
 
 // 히스토리 요약 정보 업데이트
@@ -1149,26 +1174,34 @@ function updateHistorySummary(data, startDate, endDate) {
 
 // CSV 내보내기
 function exportDataAsCSV() {
-    if (!historyDataGrid || !historyDataGrid.data) return;
+    if (!historyDataGrid) return;
 
     const fileName = `sensor_${detailModalSensor.sensorID}_${new Date().toISOString().slice(0, 10)}.csv`;
+
+    // DataTables에서 모든 데이터 가져오기
+    const data = historyDataGrid.data().toArray();
+    const headers = historyDataGrid.columns().header().toArray().map(th => $(th).text());
 
     // CSV 데이터 생성
     let csvContent = '\uFEFF'; // BOM for UTF-8
 
     // 헤더 추가
-    csvContent += historyDataGrid.headers.join(',') + '\n';
+    csvContent += headers.join(',') + '\n';
 
     // 데이터 추가
-    historyDataGrid.data.forEach(row => {
-        csvContent += row.map(cell => {
-            // 값에 쉼표나 줄바꿈이 있으면 따옴표로 감싸기
-            const value = String(cell);
+    data.forEach(row => {
+        const rowData = [];
+        historyDataGrid.columns().every(function (index) {
+            const cell = historyDataGrid.cell(row, index).data();
+            const value = String(cell || '');
             if (value.includes(',') || value.includes('\n') || value.includes('"')) {
-                return `"${value.replace(/"/g, '""')}"`;
+                rowData.push(`"${value.replace(/"/g, '""')}"`);
+            } else {
+                rowData.push(value);
             }
-            return value;
-        }).join(',') + '\n';
+            return true;
+        });
+        csvContent += rowData.join(',') + '\n';
     });
 
     // 다운로드
@@ -1187,7 +1220,7 @@ function exportDataAsCSV() {
 
 // Excel 내보내기
 function exportDataAsExcel() {
-    if (!historyDataGrid || !historyDataGrid.data) return;
+    if (!historyDataGrid) return;
 
     // XLSX 라이브러리가 로드되지 않은 경우 CSV로 대체
     if (typeof XLSX === 'undefined') {
@@ -1198,20 +1231,33 @@ function exportDataAsExcel() {
 
     const fileName = `sensor_${detailModalSensor.sensorID}_${new Date().toISOString().slice(0, 10)}.xlsx`;
 
+    // DataTables에서 모든 데이터 가져오기
+    const data = historyDataGrid.data().toArray();
+    const headers = historyDataGrid.columns().header().toArray().map(th => $(th).text());
+
     // 워크북 생성
     const wb = XLSX.utils.book_new();
 
     // 데이터 준비 (헤더 + 데이터)
-    const wsData = [historyDataGrid.headers, ...historyDataGrid.data];
+    const wsData = [headers];
+
+    data.forEach(row => {
+        const rowData = [];
+        historyDataGrid.columns().every(function (index) {
+            rowData.push(historyDataGrid.cell(row, index).data());
+            return true;
+        });
+        wsData.push(rowData);
+    });
 
     // 워크시트 생성
     const ws = XLSX.utils.aoa_to_sheet(wsData);
 
     // 컬럼 너비 자동 조정
-    const colWidths = historyDataGrid.headers.map((header, i) => {
+    const colWidths = headers.map((header, i) => {
         const maxLength = Math.max(
             header.length,
-            ...historyDataGrid.data.map(row => String(row[i]).length)
+            ...data.map(row => String(historyDataGrid.cell(row, i).data() || '').length)
         );
         return { wch: Math.min(maxLength + 2, 30) };
     });

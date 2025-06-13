@@ -14,7 +14,7 @@ namespace IoTMonitoring.Api.Data.Repositories.Interfaces
         Task<bool> DeleteAsync(int sensorId);
 
         // 필터링 조회
-        Task<IEnumerable<Sensor>> GetSensorsWithFiltersAsync(int? groupId, string status, string connectionStatus);
+        Task<IEnumerable<Sensor>> GetSensorsWithFiltersAsync(int? companyId, int? groupId, string status, string connectionStatus);
         Task<Sensor> GetSensorWithDetailsAsync(int sensorId);
         Task<IEnumerable<Sensor>> GetByGroupIdAsync(int groupId);
         Task<IEnumerable<Sensor>> GetBySensorTypeAsync(string sensorType);

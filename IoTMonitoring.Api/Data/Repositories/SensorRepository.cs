@@ -103,12 +103,18 @@ namespace IoTMonitoring.Api.Data.Repositories
             }
         }
 
-        public async Task<IEnumerable<Sensor>> GetSensorsWithFiltersAsync(int? groupId, string status, string connectionStatus)
+        public async Task<IEnumerable<Sensor>> GetSensorsWithFiltersAsync(int? companyId, int? groupId, string status, string connectionStatus)
         {
             using (var connection = await _connectionFactory.CreateConnectionAsync())
             {
                 var whereConditions = new List<string>();
                 var parameters = new DynamicParameters();
+
+                if (companyId.HasValue)
+                {
+                    whereConditions.Add("s.CompanyID = @CompanyId");
+                    parameters.Add("CompanyId", companyId.Value);
+                }
 
                 if (groupId.HasValue)
                 {

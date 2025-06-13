@@ -30,6 +30,7 @@ namespace IoTMonitoring.Api.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<SensorDto>>> GetAllSensors(
             [FromQuery] int? groupId = null,
+            [FromQuery] int? companyId = null,
             [FromQuery] string status = null,
             [FromQuery] string connectionStatus = null)
         {
@@ -37,7 +38,7 @@ namespace IoTMonitoring.Api.Controllers
             {
                 _logger.LogInformation($"센서 목록 조회 요청 - GroupId: {groupId}, Status: {status}, ConnectionStatus: {connectionStatus}");
 
-                var sensors = await _sensorService.GetAllSensorsAsync(groupId, status, connectionStatus);
+                var sensors = await _sensorService.GetAllSensorsAsync(groupId, groupId, status, connectionStatus);
 
                 _logger.LogInformation($"센서 목록 조회 완료 - 조회된 센서 수: {sensors?.Count() ?? 0}");
 

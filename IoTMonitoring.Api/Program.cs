@@ -49,7 +49,7 @@ catch (Exception ex)
 }
 
 // Rate limiting 서비스 추가
-builder.Services.AddRateLimiting(builder.Configuration);
+//builder.Services.AddRateLimiting(builder.Configuration);
 
 
 // 서비스 등록
@@ -189,7 +189,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseMiddleware<GlobalExceptionMiddleware>();
-app.UseRateLimiting(); // ⭐ 인증 전에 위치해야 함
+//app.UseRateLimiting(); // ⭐ 인증 전에 위치해야 함
 
 
 Console.WriteLine("애플리케이션이 시작되었습니다.");
